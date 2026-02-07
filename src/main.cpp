@@ -5,7 +5,7 @@
 #include <sys/file.h>
 
 #include "data.hpp"
-#include "pulse.hpp"
+#include "pipewire.hpp"
 
 #define LOCK_FILE "/tmp/sway-audio-idle-inhibit.lock"
 
@@ -85,30 +85,24 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	pa_subscription_mask_t all_mask =
-		(pa_subscription_mask_t)(PA_SUBSCRIPTION_MASK_SINK_INPUT |
-								 PA_SUBSCRIPTION_MASK_SOURCE_OUTPUT);
 	if (!printSink && !printSource && !printBoth && !printBothWayBar) {
 		// Ensure that only one blocking instance is running
 		if (is_already_running()) {
 			return EXIT_FAILURE;
 		}
-		return Pulse().init(SUBSCRIPTION_TYPE_IDLE, all_mask, EVENT_TYPE_IDLE,
-							ignoredSourceOutputs);
+		return PipeWire().init(SUBSCRIPTION_TYPE_IDLE, ignoredSourceOutputs);
 	} else if (printBoth) {
-		return Pulse().init(SUBSCRIPTION_TYPE_DRY_BOTH, all_mask,
-							EVENT_TYPE_DRY_BOTH, ignoredSourceOutputs);
+		return PipeWire().init(SUBSCRIPTION_TYPE_DRY_BOTH,
+							  ignoredSourceOutputs);
 	} else if (printBothWayBar) {
-		return Pulse().init(SUBSCRIPTION_TYPE_DRY_BOTH_WAYBAR, all_mask,
-							EVENT_TYPE_DRY_BOTH, ignoredSourceOutputs);
+		return PipeWire().init(SUBSCRIPTION_TYPE_DRY_BOTH_WAYBAR,
+							  ignoredSourceOutputs);
 	} else if (printSink) {
-		return Pulse().init(SUBSCRIPTION_TYPE_DRY_SINK,
-							PA_SUBSCRIPTION_MASK_SINK_INPUT,
-							EVENT_TYPE_DRY_SINK, ignoredSourceOutputs);
+		return PipeWire().init(SUBSCRIPTION_TYPE_DRY_SINK,
+							  ignoredSourceOutputs);
 	} else if (printSource) {
-		return Pulse().init(SUBSCRIPTION_TYPE_DRY_SOURCE,
-							PA_SUBSCRIPTION_MASK_SOURCE_OUTPUT,
-							EVENT_TYPE_DRY_SOURCE, ignoredSourceOutputs);
+		return PipeWire().init(SUBSCRIPTION_TYPE_DRY_SOURCE,
+							  ignoredSourceOutputs);
 	}
 	return EXIT_SUCCESS;
 }

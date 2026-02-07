@@ -60,11 +60,11 @@ executable(
 		'./src/data.cpp',
 		'./src/idle.cpp',
 		'./src/main.cpp',
-		'./src/pulse.cpp',
+		'./src/pipewire.cpp',
 	),
 	include_directories: include_directories('include'),
 	dependencies: [
-		dependency('libpulse', version: '>= 15.0'),
+		dependency('libpipewire-0.3'),
 		logind_dep,
 	],
 	install: true,

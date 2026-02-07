@@ -1,90 +1,123 @@
-# SwayAudioIdleInhibit
+# Pipewire Audio Idle Inhibit
 
-Prevents swayidle/hypridle from sleeping while any application is outputting or
-receiving audio. Requires systemd/elogind inhibit support.
+A daemon that prevents the screen from sleeping while audio is actively playing or being recorded through Pipewire. Works with swayidle, hypridle, and other systemd-compatible idle inhibitors.
 
-This only works for Pulseaudio / Pipewire Pulse
+**Requires:** systemd or elogind for inhibit support. Pipewire.
 
-## Install
+## How It Works
 
-Arch:
-The package is available on the [AUR](https://aur.archlinux.org/packages/sway-audio-idle-inhibit-git/)
+The daemon monitors the Pipewire audio system for active sources (microphone/input) and sinks (speakers/output). When audio activity is detected, it sends an idle inhibit request to the systemd/elogind logind service, which prevents the screen from entering sleep mode. Once all audio stops, the inhibition is released.
 
-Other:
+## Installation
 
-```zsh
-# Can compile to use systemd or elogind
-# systemd (default)
+### Arch Linux
+
+The package is available on the [AUR](https://aur.archlinux.org/packages/pipewire-audio-idle-inhibit-git/)
+
+### From Source
+
+**Compile with systemd** (default):
+```bash
 meson setup build -Dlogind-provider=systemd
-# or elogind for systemd-less systems
-meson setup build -Dlogind-provider=elogind
+meson compile -C build
+meson install -C build
+```
 
+**Compile with elogind** (for systems without systemd):
+```bash
+meson setup build -Dlogind-provider=elogind
 meson compile -C build
 meson install -C build
 ```
 
 ### Build Dependencies
 
-#### Debian (Using systemd for logind)
-
-In addition to the c++ compiler of your choosing:
-
+**Arch Linux:**
 ```bash
-apt install meson pkgconf libsystemd-dev libpulse-dev
+pacman -Syu base-devel meson pkgconf systemd pipewire
 ```
 
-## Sway Usage
+**Debian/Ubuntu (systemd):**
+```bash
+apt install meson pkgconf libsystemd-dev libpipewire-0.3-dev
+```
 
+**Fedora/RHEL (systemd):**
+```bash
+dnf install meson pkgconf systemd-devel pipewire-devel
+```
+
+## Usage
+
+### Basic daemon mode
+Run in the background to prevent idle when audio is active:
+```bash
+pipewire-audio-idle-inhibit
+```
+
+Add to your Hyprland config to auto-start:
 ```ini
-# Enables inhibit_idle when playing audio
-exec sway-audio-idle-inhibit
+exec-once = pipewire-audio-idle-inhibit
 ```
 
-## Other usages without inhibiting idle
-
-These could be used to monitor if any application is using your mic or playing
-any audio.
-
-Monitor sources and sinks: will print `RUNNING` or `NOT RUNNING`
-
-```zsh
-sway-audio-idle-inhibit --dry-print-both
+or Sway:
+```ini
+exec pipewire-audio-idle-inhibit
 ```
 
-Monitor sources: will print `RUNNING` or `NOT RUNNING`
+### Monitoring modes (dry-run)
 
-```zsh
-sway-audio-idle-inhibit --dry-print-source
+Print the audio playback/recording status without inhibiting idle:
+
+**Monitor both sinks and sources:**
+```bash
+pipewire-audio-idle-inhibit --dry-print-both
 ```
 
-Monitor sinks: will print `RUNNING` or `NOT RUNNING`
+**Monitor only audio output (sinks):**
+```bash
+pipewire-audio-idle-inhibit --dry-print-sink
+```
 
-```zsh
-sway-audio-idle-inhibit --dry-print-sink
+**Monitor only audio input (sources):**
+```bash
+pipewire-audio-idle-inhibit --dry-print-source
+```
+
+**Waybar-friendly JSON output:**
+```bash
+pipewire-audio-idle-inhibit --dry-print-both-waybar
+```
+
+### Ignoring specific sources
+Exclude certain applications or devices from triggering the idle inhibitor:
+```bash
+pipewire-audio-idle-inhibit --ignore-source-outputs "app1 app2"
 ```
 
 ## Waybar Integration
 
-A custom waybar module can be used to display an icon when any application is
-using your mic or playing any audio.
-
-Add the following section to your `~/.config/waybar/config` file and add
-`custom/audio_idle_inhibitor` to either the `modules-left`, `modules-center`
-or `modules-right` list.
-
-*Note: The FontAwesome font is used for the icons below*
+Display an icon in Waybar when audio is active. Add to `~/.config/waybar/config`:
 
 ```json
-	"custom/audio_idle_inhibitor": {
-		"format": "{icon}",
-		"exec": "sway-audio-idle-inhibit --dry-print-both-waybar",
-		"exec-if": "which sway-audio-idle-inhibit",
-		"return-type": "json",
-		"format-icons": {
-			"output": "",
-			"input": "",
-			"output-input": "  ",
-			"none": ""
-		}
-	},
+"custom/audio_idle_inhibitor": {
+  "format": "{icon}",
+  "exec": "pipewire-audio-idle-inhibit --dry-print-both-waybar",
+  "exec-if": "which pipewire-audio-idle-inhibit",
+  "return-type": "json",
+  "format-icons": {
+    "output": "🔊",
+    "input": "🎤",
+    "output-input": "🔊🎤",
+    "none": ""
+  }
+}
 ```
+
+Then add `custom/audio_idle_inhibitor` to your desired module list (modules-left, modules-center, or modules-right).
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+
+Based on the original work by Erik Reider - [SwayAudioIdleInhibit](https://github.com/ErikReider/SwayAudioIdleInhibit)

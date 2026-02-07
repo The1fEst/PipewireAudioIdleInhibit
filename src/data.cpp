@@ -3,25 +3,12 @@
 
 #include "data.hpp"
 
-Data::Data(pa_threaded_mainloop *mainloop, pa_mainloop_api *mainloop_api,
-		   SubscriptionType subscriptionType,
-		   pa_subscription_mask_t pa_subscriptionType, EventType eventType,
-		   char **ignoredSourceOutputs) {
-	this->mainloop = mainloop;
-	this->mainloop_api = mainloop_api;
+Data::Data(SubscriptionType subscriptionType, char **ignoredSourceOutputs) {
 	this->subscriptionType = subscriptionType;
-	this->pa_subscriptionType = pa_subscriptionType;
-	this->eventCalled = eventType;
 	this->ignoredSourceOutputs = ignoredSourceOutputs;
 
 	if (subscriptionType == SUBSCRIPTION_TYPE_IDLE)
 		idle = new Idle();
-}
-
-void Data::quit(int returnValue) {
-	mainloop_api->quit(mainloop_api, returnValue);
-	pa_threaded_mainloop_stop(mainloop);
-	pa_threaded_mainloop_free(mainloop);
 }
 
 void Data::handleAction() {

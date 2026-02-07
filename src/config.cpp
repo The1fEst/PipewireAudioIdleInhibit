@@ -74,11 +74,13 @@ static bool parse_config_file(const std::string &path, IgnoreConfig &config) {
 			break;
 
 		std::string key = trim(full_content.substr(pos, colon - pos));
-		// Remove leading { or quotes from key
-		while (!key.empty() && (key.front() == '{' || key.front() == '"' ||
+		// Remove leading { , } or quotes from key
+		while (!key.empty() && (key.front() == '{' || key.front() == '}' ||
+								key.front() == ',' || key.front() == '"' ||
 								key.front() == '\'' || key.front() == '\n'))
 			key.erase(0, 1);
-		while (!key.empty() && (key.back() == '"' || key.back() == '\''))
+		while (!key.empty() && (key.back() == '"' || key.back() == '\'' ||
+								key.back() == ',' || key.back() == '}'))
 			key.pop_back();
 		key = trim(key);
 

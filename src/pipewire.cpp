@@ -18,6 +18,7 @@ struct NodeData {
 	std::string media_class;
 	std::string app_name;
 	enum pw_node_state state = PW_NODE_STATE_CREATING;
+	bool is_jack = false;
 	struct pw_proxy *proxy = nullptr;
 	struct spa_hook listener = {};
 	PwContext *ctx = nullptr;
@@ -46,6 +47,42 @@ static void evaluate_streams(PwContext *ctx) {
 		NodeData *node = pair.second;
 		if (node->state != PW_NODE_STATE_RUNNING)
 			continue;
+
+		if (node->is_jack) {
+			// JACK clients (e.g. guitar amp sims) are bidirectional
+			bool ignore = false;
+			if (!node->app_name.empty()) {
+				if (ctx->data->ignoredSourceOutputs) {
+					for (int i = 0; i < MAX_IGNORED_SOURCE_OUTPUTS; i++) {
+						if (ctx->data->ignoredSourceOutputs[i] == nullptr)
+							break;
+						if (node->app_name ==
+							ctx->data->ignoredSourceOutputs[i]) {
+							ignore = true;
+							break;
+						}
+					}
+				}
+				if (!ignore && ctx->data->ignoredSinkInputs) {
+					for (int i = 0; i < MAX_IGNORED_SINK_INPUTS; i++) {
+						if (ctx->data->ignoredSinkInputs[i] == nullptr)
+							break;
+						if (node->app_name ==
+							ctx->data->ignoredSinkInputs[i]) {
+							ignore = true;
+							break;
+						}
+					}
+				}
+			}
+			if (!ignore) {
+				sink_active = true;
+				source_active = true;
+				if (!node->app_name.empty())
+					active_apps.push_back(node->app_name);
+			}
+			continue;
+		}
 
 		if (node->media_class == "Stream/Output/Audio") {
 			bool ignore = false;
@@ -117,28 +154,34 @@ static void registry_global(void *data, uint32_t id, uint32_t permissions,
 		return;
 
 	const char *media_class = spa_dict_lookup(props, PW_KEY_MEDIA_CLASS);
-	if (!media_class)
+	const char *client_api = spa_dict_lookup(props, PW_KEY_CLIENT_API);
+
+	bool is_sink = media_class && (strcmp(media_class, "Stream/Output/Audio") == 0);
+	bool is_source = media_class && (strcmp(media_class, "Stream/Input/Audio") == 0);
+	bool is_jack_client = client_api && (strcmp(client_api, "jack") == 0);
+
+	if (!is_sink && !is_source && !is_jack_client)
 		return;
 
-	bool is_sink = (strcmp(media_class, "Stream/Output/Audio") == 0);
-	bool is_source = (strcmp(media_class, "Stream/Input/Audio") == 0);
-
-	if (!is_sink && !is_source)
-		return;
-
-	// Filter based on subscription type
-	SubscriptionType st = ctx->data->subscriptionType;
-	if (st == SUBSCRIPTION_TYPE_DRY_INPUT && !is_sink)
-		return;
-	if (st == SUBSCRIPTION_TYPE_DRY_OUTPUT && !is_source)
-		return;
+	// Filter based on subscription type (JACK clients pass all filters
+	// since they are typically bidirectional)
+	if (!is_jack_client) {
+		SubscriptionType st = ctx->data->subscriptionType;
+		if (st == SUBSCRIPTION_TYPE_DRY_INPUT && !is_sink)
+			return;
+		if (st == SUBSCRIPTION_TYPE_DRY_OUTPUT && !is_source)
+			return;
+	}
 
 	NodeData *node = new NodeData();
 	node->id = id;
-	node->media_class = media_class;
+	node->media_class = media_class ? media_class : "";
+	node->is_jack = is_jack_client;
 	node->ctx = ctx;
 
 	const char *app_name = spa_dict_lookup(props, PW_KEY_APP_NAME);
+	if (!app_name)
+		app_name = spa_dict_lookup(props, PW_KEY_NODE_NAME);
 	if (app_name)
 		node->app_name = app_name;
 

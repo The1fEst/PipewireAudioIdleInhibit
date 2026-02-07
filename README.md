@@ -8,6 +8,8 @@ A daemon that prevents the screen from sleeping while audio is actively playing 
 
 The daemon monitors the Pipewire audio system for active inputs (microphone/recording) and outputs (speakers/playback). When audio activity is detected, it sends an idle inhibit request to the systemd/elogind logind service, which prevents the screen from entering sleep mode. Once all audio stops, the inhibition is released. When idle is inhibited, the daemon prints which applications are responsible.
 
+Supports both **PulseAudio-style streams** and **PipeWire-JACK clients** (e.g. Guitarix, Ardour, REAPER, guitar amp simulators). JACK clients are detected and treated as bidirectional audio nodes, making it ideal for musicians and audio engineers.
+
 ## Installation
 
 ### Arch Linux

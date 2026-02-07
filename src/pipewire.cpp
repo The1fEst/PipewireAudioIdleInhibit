@@ -13,12 +13,13 @@
 
 struct PwContext;
 
+enum class NodeType { Output, Input, Jack };
+
 struct NodeData {
 	uint32_t id;
-	std::string media_class;
+	NodeType type;
 	std::string app_name;
 	enum pw_node_state state = PW_NODE_STATE_CREATING;
-	bool is_jack = false;
 	struct pw_proxy *proxy = nullptr;
 	struct spa_hook listener = {};
 	PwContext *ctx = nullptr;
@@ -38,6 +39,18 @@ struct PwContext {
 	bool initial_sync_done = false;
 };
 
+static bool is_ignored(const std::string &name, char **list, int max) {
+	if (name.empty() || !list)
+		return false;
+	for (int i = 0; i < max; i++) {
+		if (!list[i])
+			break;
+		if (name == list[i])
+			return true;
+	}
+	return false;
+}
+
 static void evaluate_streams(PwContext *ctx) {
 	bool sink_active = false;
 	bool source_active = false;
@@ -48,80 +61,37 @@ static void evaluate_streams(PwContext *ctx) {
 		if (node->state != PW_NODE_STATE_RUNNING)
 			continue;
 
-		if (node->is_jack) {
-			// JACK clients (e.g. guitar amp sims) are bidirectional
-			bool ignore = false;
-			if (!node->app_name.empty()) {
-				if (ctx->data->ignoredSourceOutputs) {
-					for (int i = 0; i < MAX_IGNORED_SOURCE_OUTPUTS; i++) {
-						if (ctx->data->ignoredSourceOutputs[i] == nullptr)
-							break;
-						if (node->app_name ==
-							ctx->data->ignoredSourceOutputs[i]) {
-							ignore = true;
-							break;
-						}
-					}
-				}
-				if (!ignore && ctx->data->ignoredSinkInputs) {
-					for (int i = 0; i < MAX_IGNORED_SINK_INPUTS; i++) {
-						if (ctx->data->ignoredSinkInputs[i] == nullptr)
-							break;
-						if (node->app_name ==
-							ctx->data->ignoredSinkInputs[i]) {
-							ignore = true;
-							break;
-						}
-					}
-				}
-			}
-				if (!ignore) {
-				sink_active = true;
-				source_active = true;
-				if (!node->app_name.empty()) {
-					active_apps.push_back(node->app_name + " (input)");
-					active_apps.push_back(node->app_name + " (output)");
-				}
-			}
-			continue;
-		}
+		const auto &name = node->app_name;
+		bool ignored_out = is_ignored(name, ctx->data->ignoredSourceOutputs,
+									  MAX_IGNORED_SOURCE_OUTPUTS);
+		bool ignored_in = is_ignored(name, ctx->data->ignoredSinkInputs,
+									 MAX_IGNORED_SINK_INPUTS);
 
-		if (node->media_class == "Stream/Output/Audio") {
-			bool ignore = false;
-			if (!node->app_name.empty() && ctx->data->ignoredSourceOutputs) {
-				for (int i = 0; i < MAX_IGNORED_SOURCE_OUTPUTS; i++) {
-					if (ctx->data->ignoredSourceOutputs[i] == nullptr)
-						break;
-					if (node->app_name ==
-						ctx->data->ignoredSourceOutputs[i]) {
-						ignore = true;
-						break;
-					}
-				}
-			}
-				if (!ignore) {
-				source_active = true;
-				if (!node->app_name.empty())
-					active_apps.push_back(node->app_name + " (output)");
-			}
-		} else if (node->media_class == "Stream/Input/Audio") {
-			bool ignore = false;
-			if (!node->app_name.empty() && ctx->data->ignoredSinkInputs) {
-				for (int i = 0; i < MAX_IGNORED_SINK_INPUTS; i++) {
-					if (ctx->data->ignoredSinkInputs[i] == nullptr)
-						break;
-					if (node->app_name ==
-						ctx->data->ignoredSinkInputs[i]) {
-						ignore = true;
-						break;
-					}
-				}
-			}
-			if (!ignore) {
+		switch (node->type) {
+		case NodeType::Jack:
+			if (!ignored_out && !ignored_in) {
 				sink_active = true;
-				if (!node->app_name.empty())
-					active_apps.push_back(node->app_name + " (input)");
+				source_active = true;
+				if (!name.empty()) {
+					active_apps.push_back(name + " (input)");
+					active_apps.push_back(name + " (output)");
+				}
 			}
+			break;
+		case NodeType::Output:
+			if (!ignored_out) {
+				source_active = true;
+				if (!name.empty())
+					active_apps.push_back(name + " (output)");
+			}
+			break;
+		case NodeType::Input:
+			if (!ignored_in) {
+				sink_active = true;
+				if (!name.empty())
+					active_apps.push_back(name + " (input)");
+			}
+			break;
 		}
 	}
 
@@ -129,9 +99,8 @@ static void evaluate_streams(PwContext *ctx) {
 	ctx->data->activeSource = source_active;
 	ctx->data->activeApps = active_apps;
 
-	if (ctx->initial_sync_done) {
+	if (ctx->initial_sync_done)
 		ctx->data->handleAction();
-	}
 }
 
 static void node_info(void *object, const struct pw_node_info *info) {
@@ -158,27 +127,30 @@ static void registry_global(void *data, uint32_t id, uint32_t permissions,
 	const char *media_class = spa_dict_lookup(props, PW_KEY_MEDIA_CLASS);
 	const char *client_api = spa_dict_lookup(props, PW_KEY_CLIENT_API);
 
-	bool is_sink = media_class && (strcmp(media_class, "Stream/Output/Audio") == 0);
-	bool is_source = media_class && (strcmp(media_class, "Stream/Input/Audio") == 0);
-	bool is_jack_client = client_api && (strcmp(client_api, "jack") == 0);
+	bool is_output = media_class && strcmp(media_class, "Stream/Output/Audio") == 0;
+	bool is_input = media_class && strcmp(media_class, "Stream/Input/Audio") == 0;
+	bool is_jack = client_api && strcmp(client_api, "jack") == 0;
 
-	if (!is_sink && !is_source && !is_jack_client)
+	if (!is_output && !is_input && !is_jack)
 		return;
 
 	// Filter based on subscription type (JACK clients pass all filters
 	// since they are typically bidirectional)
-	if (!is_jack_client) {
+	if (!is_jack) {
 		SubscriptionType st = ctx->data->subscriptionType;
-		if (st == SUBSCRIPTION_TYPE_DRY_INPUT && !is_sink)
+		if (st == SUBSCRIPTION_TYPE_DRY_INPUT && !is_output)
 			return;
-		if (st == SUBSCRIPTION_TYPE_DRY_OUTPUT && !is_source)
+		if (st == SUBSCRIPTION_TYPE_DRY_OUTPUT && !is_input)
 			return;
 	}
 
+NodeType node_type = is_jack ? NodeType::Jack
+					 : is_input ? NodeType::Input
+								   : NodeType::Output;
+
 	NodeData *node = new NodeData();
 	node->id = id;
-	node->media_class = media_class ? media_class : "";
-	node->is_jack = is_jack_client;
+	node->type = node_type;
 	node->ctx = ctx;
 
 	const char *app_name = spa_dict_lookup(props, PW_KEY_APP_NAME);

@@ -21,7 +21,7 @@ void Idle::block() {
 	int ret = sd_bus_call_method(
 		bus, "org.freedesktop.login1", "/org/freedesktop/login1",
 		"org.freedesktop.login1.Manager", "Inhibit", &error, &message, "ssss",
-		"idle", "sway-audio-idle-inhibit", "Audio is playing", "block");
+		"idle", "pipewire-audio-idle-inhibit", "Audio is playing", "block");
 	if (ret < 0) {
 		fprintf(stderr, "Could not send inhibit signal! %s: %s\n", error.name,
 				error.message);

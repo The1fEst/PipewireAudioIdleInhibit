@@ -48,14 +48,14 @@ if get_option('logind-provider') == 'systemd'
 	conf_data.set('bindir', join_paths(get_option('prefix'), get_option('bindir')))
 	configure_file(
 		configuration: conf_data,
-		input: 'services/systemd/sway-audio-idle-inhibit.service.in',
+		input: 'services/systemd/pipewire-audio-idle-inhibit.service.in',
 		output: '@BASENAME@',
 		install_dir: systemd_service_install_dir,
 	)
 endif
 
 executable(
-	'sway-audio-idle-inhibit',
+	'pipewire-audio-idle-inhibit',
 	files(
 		'./src/data.cpp',
 		'./src/idle.cpp',

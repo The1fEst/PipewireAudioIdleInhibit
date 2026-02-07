@@ -7,7 +7,7 @@
 #include "data.hpp"
 #include "pipewire.hpp"
 
-#define LOCK_FILE "/tmp/sway-audio-idle-inhibit.lock"
+#define LOCK_FILE "/tmp/pipewire-audio-idle-inhibit.lock"
 
 void showHelp(char **argv) {
 	string name = basename(argv[0]);

@@ -1,6 +1,6 @@
 [Unit]
-Description=SwayAudioIdleInhibit daemon
-Documentation=https://github.com/ErikReider/SwayAudioIdleInhibit
+Description=Pipewire Audio Idle Inhibit daemon
+Documentation=https://github.com/The1fEst/PipewireAudioIdleInhibit
 PartOf=graphical-session.target
 After=graphical-session.target
 # ConditionEnvironment requires systemd v247 to work correctly
@@ -8,7 +8,7 @@ ConditionEnvironment=WAYLAND_DISPLAY
 
 [Service]
 Type=simple
-ExecStart=@bindir@/sway-audio-idle-inhibit
+ExecStart=@bindir@/pipewire-audio-idle-inhibit
 Restart=on-failure
 
 [Install]

@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <map>
+#include <set>
 #include <string>
 
 #include <pipewire/pipewire.h>
@@ -39,16 +40,11 @@ struct PwContext {
 	bool initial_sync_done = false;
 };
 
-static bool is_ignored(const std::string &name, char **list, int max) {
-	if (name.empty() || !list)
+static bool is_ignored(const std::string &name,
+					   const std::set<std::string> &ignore_set) {
+	if (name.empty())
 		return false;
-	for (int i = 0; i < max; i++) {
-		if (!list[i])
-			break;
-		if (name == list[i])
-			return true;
-	}
-	return false;
+	return ignore_set.count(name) > 0;
 }
 
 static void evaluate_streams(PwContext *ctx) {
@@ -62,10 +58,8 @@ static void evaluate_streams(PwContext *ctx) {
 			continue;
 
 		const auto &name = node->app_name;
-		bool ignored_out = is_ignored(name, ctx->data->ignoredSourceOutputs,
-									  MAX_IGNORED_SOURCE_OUTPUTS);
-		bool ignored_in = is_ignored(name, ctx->data->ignoredSinkInputs,
-									 MAX_IGNORED_SINK_INPUTS);
+		bool ignored_out = is_ignored(name, ctx->data->ignoreConfig.output);
+		bool ignored_in = is_ignored(name, ctx->data->ignoreConfig.input);
 
 		switch (node->type) {
 		case NodeType::Jack:
@@ -218,14 +212,11 @@ static const struct pw_core_events core_events = {
 	.error = on_core_error,
 };
 
-int PipeWire::init(SubscriptionType subscriptionType,
-				   char **ignoredSourceOutputs,
-				   char **ignoredSinkInputs) {
+int PipeWire::init(SubscriptionType subscriptionType) {
 	pw_init(nullptr, nullptr);
 
 	PwContext *ctx = new PwContext();
-	ctx->data = new Data(subscriptionType, ignoredSourceOutputs,
-						 ignoredSinkInputs);
+	ctx->data = new Data(subscriptionType);
 
 	ctx->loop = pw_main_loop_new(nullptr);
 	if (!ctx->loop) {

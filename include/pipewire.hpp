@@ -4,6 +4,5 @@
 
 class PipeWire {
   public:
-	int init(SubscriptionType subscriptionType, char **ignoredSourceOutputs,
-			 char **ignoredSinkInputs);
+	int init(SubscriptionType subscriptionType);
 };

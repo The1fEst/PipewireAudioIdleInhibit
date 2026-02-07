@@ -4,12 +4,10 @@
 #include <string>
 #include <vector>
 
+#include "config.hpp"
 #include "idle.hpp"
 
 using namespace std;
-
-#define MAX_IGNORED_SOURCE_OUTPUTS 100
-#define MAX_IGNORED_SINK_INPUTS 100
 
 enum SubscriptionType {
 	SUBSCRIPTION_TYPE_IDLE,
@@ -30,14 +28,11 @@ struct Data {
 	map<string, AppActivity> activeApps;
 
 	SubscriptionType subscriptionType;
-
-	char **ignoredSourceOutputs;
-	char **ignoredSinkInputs;
+	IgnoreConfig ignoreConfig;
 
 	Idle *idle = NULL;
 
-	Data(SubscriptionType subscriptionType, char **ignoredSourceOutputs,
-		 char **ignoredSinkInputs);
+	Data(SubscriptionType subscriptionType);
 
 	void handleAction();
 

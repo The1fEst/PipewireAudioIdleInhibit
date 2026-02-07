@@ -25,12 +25,10 @@ static void showHelp(char **argv) {
 			"input is running\n";
 	cout << "\t --output \t\t\t Don't inhibit idle and print if any "
 			"output is running\n";
-	cout << "\t --o \t\t\t\t Don't inhibit idle for these "
-			"source outputs\n";
-	cout << "\t --i \t\t\t\t Don't inhibit idle for these "
-			"sink inputs\n";
-	cout << "\t --b \t\t\t\t Don't inhibit idle for these "
-			"source outputs and sink inputs\n";
+	cout << "\nIgnore config file searched in order:\n";
+	cout << "\t $XDG_CONFIG_HOME/pipewire-audio-idle-inhibit/ignore.conf\n";
+	cout << "\t /etc/pipewire-audio-idle-inhibit/ignore.conf\n";
+	cout << "\t /usr/share/pipewire-audio-idle-inhibit/ignore.conf\n";
 }
 
 static bool isAlreadyRunning() {
@@ -50,48 +48,8 @@ static bool isAlreadyRunning() {
 	return false;
 }
 
-static bool isInList(char **list, int count, const char *name) {
-	for (int j = 0; j < count; j++) {
-		if (strcmp(list[j], name) == 0)
-			return true;
-	}
-	return false;
-}
-
-static void parseIgnoreList(char *arg, char **list, int &count, int max) {
-	char *saveptr;
-	char *token = strtok_r(arg, " ", &saveptr);
-	while (token != nullptr && count < max) {
-		if (!isInList(list, count, token))
-			list[count++] = token;
-		token = strtok_r(nullptr, " ", &saveptr);
-	}
-	list[count] = nullptr;
-}
-
-static void parseIgnoreBoth(char *arg, char **outList, int &outCount,
-							int outMax, char **inList, int &inCount,
-							int inMax) {
-	char *saveptr;
-	char *token = strtok_r(arg, " ", &saveptr);
-	while (token != nullptr) {
-		if (outCount < outMax && !isInList(outList, outCount, token))
-			outList[outCount++] = token;
-		if (inCount < inMax && !isInList(inList, inCount, token))
-			inList[inCount++] = token;
-		token = strtok_r(nullptr, " ", &saveptr);
-	}
-	outList[outCount] = nullptr;
-	inList[inCount] = nullptr;
-}
-
 int main(int argc, char *argv[]) {
 	SubscriptionType subType = SUBSCRIPTION_TYPE_IDLE;
-
-	char *ignoredSourceOutputs[MAX_IGNORED_SOURCE_OUTPUTS] = {nullptr};
-	int ignoredSourceOutputsCount = 0;
-	char *ignoredSinkInputs[MAX_IGNORED_SINK_INPUTS] = {nullptr};
-	int ignoredSinkInputsCount = 0;
 
 	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
@@ -105,23 +63,11 @@ int main(int argc, char *argv[]) {
 			subType = SUBSCRIPTION_TYPE_DRY_BOTH;
 		} else if (strcmp(argv[i], "--waybar") == 0) {
 			subType = SUBSCRIPTION_TYPE_DRY_BOTH_WAYBAR;
-		} else if (strcmp(argv[i], "--o") == 0 && i + 1 < argc) {
-			parseIgnoreList(argv[++i], ignoredSourceOutputs,
-							ignoredSourceOutputsCount,
-							MAX_IGNORED_SOURCE_OUTPUTS);
-		} else if (strcmp(argv[i], "--i") == 0 && i + 1 < argc) {
-			parseIgnoreList(argv[++i], ignoredSinkInputs,
-							ignoredSinkInputsCount, MAX_IGNORED_SINK_INPUTS);
-		} else if (strcmp(argv[i], "--b") == 0 && i + 1 < argc) {
-			parseIgnoreBoth(argv[++i], ignoredSourceOutputs,
-							ignoredSourceOutputsCount,
-							MAX_IGNORED_SOURCE_OUTPUTS, ignoredSinkInputs,
-							ignoredSinkInputsCount, MAX_IGNORED_SINK_INPUTS);
 		}
 	}
 
 	if (subType == SUBSCRIPTION_TYPE_IDLE && isAlreadyRunning())
 		return EXIT_FAILURE;
 
-	return PipeWire().init(subType, ignoredSourceOutputs, ignoredSinkInputs);
+	return PipeWire().init(subType);
 }

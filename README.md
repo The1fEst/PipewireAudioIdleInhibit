@@ -105,24 +105,33 @@ pipewire-audio-idle-inhibit --waybar
 
 ### Ignoring specific applications
 
-Exclude certain applications from triggering the idle inhibitor.
+Exclude certain applications from triggering the idle inhibitor using a config file.
 
-**Ignore for outputs (speakers/playback):**
+The config file is searched in the following order (first found wins):
+1. `$XDG_CONFIG_HOME/pipewire-audio-idle-inhibit/ignore.conf`
+2. `/etc/pipewire-audio-idle-inhibit/ignore.conf`
+3. `/usr/share/pipewire-audio-idle-inhibit/ignore.conf`
+
+A default example config is installed to `/usr/share/pipewire-audio-idle-inhibit/ignore.conf`. Copy it to customize:
+
 ```bash
-pipewire-audio-idle-inhibit --o "Firefox Spotify"
+mkdir -p ~/.config/pipewire-audio-idle-inhibit
+cp /usr/share/pipewire-audio-idle-inhibit/ignore.conf ~/.config/pipewire-audio-idle-inhibit/
 ```
 
-**Ignore for inputs (microphone/recording):**
-```bash
-pipewire-audio-idle-inhibit --i "Discord Zoom"
-```
+**Config format:**
+```json
+{
+    # Ignore these apps only for input (microphone/recording)
+    input: ["Discord", "Zoom"],
 
-**Ignore for both inputs and outputs:**
-```bash
-pipewire-audio-idle-inhibit --b "Firefox Spotify Discord"
-```
+    # Ignore these apps only for output (speakers/playback)
+    output: ["Firefox", "Spotify"],
 
-Multiple applications can be specified separated by spaces. Duplicates are automatically removed.
+    # Ignore these apps for both input and output
+    both: ["mpv"]
+}
+```
 
 ## Waybar Integration
 

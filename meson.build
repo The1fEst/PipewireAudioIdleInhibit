@@ -57,6 +57,7 @@ endif
 executable(
 	'pipewire-audio-idle-inhibit',
 	files(
+		'./src/config.cpp',
 		'./src/data.cpp',
 		'./src/idle.cpp',
 		'./src/main.cpp',
@@ -68,4 +69,10 @@ executable(
 		logind_dep,
 	],
 	install: true,
+)
+
+# Default ignore config
+install_data(
+	'config/ignore.conf',
+	install_dir: join_paths(get_option('datadir'), 'pipewire-audio-idle-inhibit'),
 )

@@ -3,11 +3,9 @@
 
 #include "data.hpp"
 
-Data::Data(SubscriptionType subscriptionType, char **ignoredSourceOutputs,
-		   char **ignoredSinkInputs) {
+Data::Data(SubscriptionType subscriptionType) {
 	this->subscriptionType = subscriptionType;
-	this->ignoredSourceOutputs = ignoredSourceOutputs;
-	this->ignoredSinkInputs = ignoredSinkInputs;
+	this->ignoreConfig = load_ignore_config();
 
 	if (subscriptionType == SUBSCRIPTION_TYPE_IDLE)
 		idle = new Idle();

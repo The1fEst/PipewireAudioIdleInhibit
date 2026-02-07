@@ -75,11 +75,13 @@ static void evaluate_streams(PwContext *ctx) {
 					}
 				}
 			}
-			if (!ignore) {
+				if (!ignore) {
 				sink_active = true;
 				source_active = true;
-				if (!node->app_name.empty())
-					active_apps.push_back(node->app_name);
+				if (!node->app_name.empty()) {
+					active_apps.push_back(node->app_name + " (input)");
+					active_apps.push_back(node->app_name + " (output)");
+				}
 			}
 			continue;
 		}
@@ -97,10 +99,10 @@ static void evaluate_streams(PwContext *ctx) {
 					}
 				}
 			}
-			if (!ignore) {
+				if (!ignore) {
 				source_active = true;
 				if (!node->app_name.empty())
-					active_apps.push_back(node->app_name);
+					active_apps.push_back(node->app_name + " (output)");
 			}
 		} else if (node->media_class == "Stream/Input/Audio") {
 			bool ignore = false;
@@ -118,7 +120,7 @@ static void evaluate_streams(PwContext *ctx) {
 			if (!ignore) {
 				sink_active = true;
 				if (!node->app_name.empty())
-					active_apps.push_back(node->app_name);
+					active_apps.push_back(node->app_name + " (input)");
 			}
 		}
 	}

@@ -62,8 +62,9 @@ Idle::Idle() {
 	}
 }
 
-void Idle::update(bool isRunning, const std::vector<std::string> &activeApps) {
-	if (isRunning) {
+void Idle::update(bool activeSink, bool activeSource,
+				   const std::vector<std::string> &activeApps) {
+	if (activeSink || activeSource) {
 		block();
 		cout << "IDLE INHIBITED by:";
 		for (const auto &app : activeApps)

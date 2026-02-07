@@ -22,5 +22,6 @@ class Idle {
   public:
 	Idle();
 
-	void update(bool isRunning, const std::vector<std::string> &activeApps);
+	void update(bool activeSink, bool activeSource,
+			const std::vector<std::string> &activeApps);
 };

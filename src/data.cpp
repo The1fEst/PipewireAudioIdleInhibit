@@ -16,7 +16,7 @@ Data::Data(SubscriptionType subscriptionType, char **ignoredSourceOutputs,
 void Data::handleAction() {
 	switch (subscriptionType) {
 	case SUBSCRIPTION_TYPE_IDLE:
-		idle->update(activeSink || activeSource, activeApps);
+		idle->update(activeSink, activeSource, activeApps);
 		break;
 	case SUBSCRIPTION_TYPE_DRY_BOTH:
 		this->print(activeSink || activeSource);

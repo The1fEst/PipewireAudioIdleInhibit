@@ -62,10 +62,13 @@ Idle::Idle() {
 	}
 }
 
-void Idle::update(bool isRunning) {
+void Idle::update(bool isRunning, const std::vector<std::string> &activeApps) {
 	if (isRunning) {
 		block();
-		cout << "IDLE INHIBITED" << endl;
+		cout << "IDLE INHIBITED by:";
+		for (const auto &app : activeApps)
+			cout << " " << app;
+		cout << endl;
 	} else {
 		release_block();
 		cout << "NOT IDLE INHIBITED" << endl;

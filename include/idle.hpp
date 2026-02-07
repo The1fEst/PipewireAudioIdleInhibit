@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <vector>
+
 #ifdef HAVE_SYSTEMD
 #include <systemd/sd-bus.h>
 #include <systemd/sd-login.h>
@@ -19,5 +22,5 @@ class Idle {
   public:
 	Idle();
 
-	void update(bool isRunning);
+	void update(bool isRunning, const std::vector<std::string> &activeApps);
 };

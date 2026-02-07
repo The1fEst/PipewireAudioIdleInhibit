@@ -6,7 +6,7 @@ A daemon that prevents the screen from sleeping while audio is actively playing 
 
 ## How It Works
 
-The daemon monitors the Pipewire audio system for active sources (microphone/input) and sinks (speakers/output). When audio activity is detected, it sends an idle inhibit request to the systemd/elogind logind service, which prevents the screen from entering sleep mode. Once all audio stops, the inhibition is released.
+The daemon monitors the Pipewire audio system for active inputs (microphone/recording) and outputs (speakers/playback). When audio activity is detected, it sends an idle inhibit request to the systemd/elogind logind service, which prevents the screen from entering sleep mode. Once all audio stops, the inhibition is released. When idle is inhibited, the daemon prints which applications are responsible.
 
 ## Installation
 
@@ -55,6 +55,11 @@ Run in the background to prevent idle when audio is active:
 pipewire-audio-idle-inhibit
 ```
 
+When audio starts playing or recording, the output shows:
+```
+IDLE INHIBITED by: Firefox Spotify
+```
+
 Add to your Hyprland config to auto-start:
 ```ini
 exec-once = pipewire-audio-idle-inhibit
@@ -67,33 +72,48 @@ exec pipewire-audio-idle-inhibit
 
 ### Monitoring modes (dry-run)
 
-Print the audio playback/recording status without inhibiting idle:
+Print the audio activity status without inhibiting idle:
 
-**Monitor both sinks and sources:**
+**Monitor both inputs and outputs:**
 ```bash
-pipewire-audio-idle-inhibit --dry-print-both
+pipewire-audio-idle-inhibit --both
 ```
 
-**Monitor only audio output (sinks):**
+**Monitor only audio output:**
 ```bash
-pipewire-audio-idle-inhibit --dry-print-sink
+pipewire-audio-idle-inhibit --output
 ```
 
-**Monitor only audio input (sources):**
+**Monitor only audio input:**
 ```bash
-pipewire-audio-idle-inhibit --dry-print-source
+pipewire-audio-idle-inhibit --input
 ```
 
 **Waybar-friendly JSON output:**
 ```bash
-pipewire-audio-idle-inhibit --dry-print-both-waybar
+pipewire-audio-idle-inhibit --waybar
 ```
 
-### Ignoring specific sources
-Exclude certain applications or devices from triggering the idle inhibitor:
+### Ignoring specific applications
+
+Exclude certain applications from triggering the idle inhibitor.
+
+**Ignore for outputs (speakers/playback):**
 ```bash
-pipewire-audio-idle-inhibit --ignore-source-outputs "app1 app2"
+pipewire-audio-idle-inhibit --o "Firefox Spotify"
 ```
+
+**Ignore for inputs (microphone/recording):**
+```bash
+pipewire-audio-idle-inhibit --i "Discord Zoom"
+```
+
+**Ignore for both inputs and outputs:**
+```bash
+pipewire-audio-idle-inhibit --b "Firefox Spotify Discord"
+```
+
+Multiple applications can be specified separated by spaces. Duplicates are automatically removed.
 
 ## Waybar Integration
 
@@ -102,7 +122,7 @@ Display an icon in Waybar when audio is active. Add to `~/.config/waybar/config`
 ```json
 "custom/audio_idle_inhibitor": {
   "format": "{icon}",
-  "exec": "pipewire-audio-idle-inhibit --dry-print-both-waybar",
+  "exec": "pipewire-audio-idle-inhibit --waybar",
   "exec-if": "which pipewire-audio-idle-inhibit",
   "return-type": "json",
   "format-icons": {
@@ -116,8 +136,23 @@ Display an icon in Waybar when audio is active. Add to `~/.config/waybar/config`
 
 Then add `custom/audio_idle_inhibitor` to your desired module list (modules-left, modules-center, or modules-right).
 
+## Development
+
+### Build with debug symbols:
+```bash
+meson setup build --buildtype=debug
+meson compile -C build
+```
+
+### Debug in VS Code:
+1. Open the workspace in VS Code
+2. Press **F5** to start debugging (configured in `.vscode/launch.json`)
+3. Set breakpoints as needed
+4. The pre-launch task will build the project automatically
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
 
 Based on the original work by Erik Reider - [SwayAudioIdleInhibit](https://github.com/ErikReider/SwayAudioIdleInhibit)
+

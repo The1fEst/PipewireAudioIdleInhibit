@@ -3,9 +3,11 @@
 
 #include "data.hpp"
 
-Data::Data(SubscriptionType subscriptionType, char **ignoredSourceOutputs) {
+Data::Data(SubscriptionType subscriptionType, char **ignoredSourceOutputs,
+		   char **ignoredSinkInputs) {
 	this->subscriptionType = subscriptionType;
 	this->ignoredSourceOutputs = ignoredSourceOutputs;
+	this->ignoredSinkInputs = ignoredSinkInputs;
 
 	if (subscriptionType == SUBSCRIPTION_TYPE_IDLE)
 		idle = new Idle();
@@ -14,7 +16,7 @@ Data::Data(SubscriptionType subscriptionType, char **ignoredSourceOutputs) {
 void Data::handleAction() {
 	switch (subscriptionType) {
 	case SUBSCRIPTION_TYPE_IDLE:
-		idle->update(activeSink || activeSource);
+		idle->update(activeSink || activeSource, activeApps);
 		break;
 	case SUBSCRIPTION_TYPE_DRY_BOTH:
 		this->print(activeSink || activeSource);
@@ -22,10 +24,10 @@ void Data::handleAction() {
 	case SUBSCRIPTION_TYPE_DRY_BOTH_WAYBAR:
 		this->printWayBar(activeSink, activeSource);
 		break;
-	case SUBSCRIPTION_TYPE_DRY_SINK:
+	case SUBSCRIPTION_TYPE_DRY_INPUT:
 		this->print(activeSink);
 		break;
-	case SUBSCRIPTION_TYPE_DRY_SOURCE:
+	case SUBSCRIPTION_TYPE_DRY_OUTPUT:
 		this->print(activeSource);
 		break;
 	}

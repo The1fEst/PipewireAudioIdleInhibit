@@ -9,29 +9,31 @@
 
 #define LOCK_FILE "/tmp/pipewire-audio-idle-inhibit.lock"
 
-void showHelp(char **argv) {
+static void showHelp(char **argv) {
 	string name = basename(argv[0]);
 	cout << "Usage:\n";
 	cout << "\t" << name << " <OPTION>\n";
 	cout << "Options:\n";
 	cout << "\t " << name
-		 << "\t Inhibits idle if either any sink or any source is running\n";
+		 << "\t Inhibits idle if either any input or any output is running\n";
 	cout << "\t -h, --help \t\t\t Show help options\n";
-	cout << "\t --dry-print-both \t\t Don't inhibit idle and print if either "
-			"any "
-			"sink or any source is running\n";
-	cout
-		<< "\t --dry-print-both-waybar \t Same as --dry-print-both but outputs "
-		   "in a waybar friendly manner\n";
-	cout << "\t --dry-print-sink \t\t Don't inhibit idle and print if any "
-			"sink is running\n";
-	cout << "\t --dry-print-source \t\t Don't inhibit idle and print if any "
-			"source is running\n";
-	cout << "\t --ignore-source-outputs \t\t Don't inhibit idle for these "
+	cout << "\t --both \t\t\t Don't inhibit idle and print if either "
+			"any input or any output is running\n";
+	cout << "\t --waybar \t\t\t Same as --both but outputs "
+			"in a waybar friendly manner\n";
+	cout << "\t --input \t\t\t Don't inhibit idle and print if any "
+			"input is running\n";
+	cout << "\t --output \t\t\t Don't inhibit idle and print if any "
+			"output is running\n";
+	cout << "\t --o \t\t\t\t Don't inhibit idle for these "
 			"source outputs\n";
+	cout << "\t --i \t\t\t\t Don't inhibit idle for these "
+			"sink inputs\n";
+	cout << "\t --b \t\t\t\t Don't inhibit idle for these "
+			"source outputs and sink inputs\n";
 }
 
-static bool is_already_running() {
+static bool isAlreadyRunning() {
 	FILE *fd = fopen(LOCK_FILE, "w+");
 	if (!fd) {
 		fprintf(stderr, "Could not open lock file: %s\n", LOCK_FILE);
@@ -48,61 +50,78 @@ static bool is_already_running() {
 	return false;
 }
 
+static bool isInList(char **list, int count, const char *name) {
+	for (int j = 0; j < count; j++) {
+		if (strcmp(list[j], name) == 0)
+			return true;
+	}
+	return false;
+}
+
+static void parseIgnoreList(char *arg, char **list, int &count, int max) {
+	char *saveptr;
+	char *token = strtok_r(arg, " ", &saveptr);
+	while (token != nullptr && count < max) {
+		if (!isInList(list, count, token))
+			list[count++] = token;
+		token = strtok_r(nullptr, " ", &saveptr);
+	}
+	list[count] = nullptr;
+}
+
+static void parseIgnoreBoth(char *arg, char **outList, int &outCount,
+							int outMax, char **inList, int &inCount,
+							int inMax) {
+	char *saveptr;
+	char *token = strtok_r(arg, " ", &saveptr);
+	while (token != nullptr) {
+		if (outCount < outMax && !isInList(outList, outCount, token))
+			outList[outCount++] = token;
+		if (inCount < inMax && !isInList(inList, inCount, token))
+			inList[inCount++] = token;
+		token = strtok_r(nullptr, " ", &saveptr);
+	}
+	outList[outCount] = nullptr;
+	inList[inCount] = nullptr;
+}
+
 int main(int argc, char *argv[]) {
-	bool printBoth = false;
-	bool printBothWayBar = false;
-	bool printSource = false;
-	bool printSink = false;
+	SubscriptionType subType = SUBSCRIPTION_TYPE_IDLE;
 
 	char *ignoredSourceOutputs[MAX_IGNORED_SOURCE_OUTPUTS] = {nullptr};
 	int ignoredSourceOutputsCount = 0;
+	char *ignoredSinkInputs[MAX_IGNORED_SINK_INPUTS] = {nullptr};
+	int ignoredSinkInputsCount = 0;
 
-	if (argc > 1) {
-		for (int i = 1; i < argc; i++) {
-			if (strcmp(argv[i], "--dry-print-source") == 0) {
-				printSource = true;
-			} else if (strcmp(argv[i], "--dry-print-sink") == 0) {
-				printSink = true;
-			} else if (strcmp(argv[i], "--dry-print-both") == 0) {
-				printBoth = true;
-			} else if (strcmp(argv[i], "--dry-print-both-waybar") == 0) {
-				printBothWayBar = true;
-			} else if (strcmp(argv[i], "--ignore-source-outputs") == 0 &&
-					   i + 1 < argc) {
-				char *saveptr;
-				char *token = strtok_r(argv[++i], " ", &saveptr);
-				while (token != nullptr &&
-					   ignoredSourceOutputsCount < MAX_IGNORED_SOURCE_OUTPUTS) {
-					ignoredSourceOutputs[ignoredSourceOutputsCount++] = token;
-					token = strtok_r(nullptr, " ", &saveptr);
-				}
-
-				ignoredSourceOutputs[ignoredSourceOutputsCount] = nullptr;
-			} else {
-				showHelp(argv);
-				return EXIT_SUCCESS;
-			}
+	for (int i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
+			showHelp(argv);
+			return EXIT_SUCCESS;
+		} else if (strcmp(argv[i], "--output") == 0) {
+			subType = SUBSCRIPTION_TYPE_DRY_OUTPUT;
+		} else if (strcmp(argv[i], "--input") == 0) {
+			subType = SUBSCRIPTION_TYPE_DRY_INPUT;
+		} else if (strcmp(argv[i], "--both") == 0) {
+			subType = SUBSCRIPTION_TYPE_DRY_BOTH;
+		} else if (strcmp(argv[i], "--waybar") == 0) {
+			subType = SUBSCRIPTION_TYPE_DRY_BOTH_WAYBAR;
+		} else if (strcmp(argv[i], "--o") == 0 && i + 1 < argc) {
+			parseIgnoreList(argv[++i], ignoredSourceOutputs,
+							ignoredSourceOutputsCount,
+							MAX_IGNORED_SOURCE_OUTPUTS);
+		} else if (strcmp(argv[i], "--i") == 0 && i + 1 < argc) {
+			parseIgnoreList(argv[++i], ignoredSinkInputs,
+							ignoredSinkInputsCount, MAX_IGNORED_SINK_INPUTS);
+		} else if (strcmp(argv[i], "--b") == 0 && i + 1 < argc) {
+			parseIgnoreBoth(argv[++i], ignoredSourceOutputs,
+							ignoredSourceOutputsCount,
+							MAX_IGNORED_SOURCE_OUTPUTS, ignoredSinkInputs,
+							ignoredSinkInputsCount, MAX_IGNORED_SINK_INPUTS);
 		}
 	}
 
-	if (!printSink && !printSource && !printBoth && !printBothWayBar) {
-		// Ensure that only one blocking instance is running
-		if (is_already_running()) {
-			return EXIT_FAILURE;
-		}
-		return PipeWire().init(SUBSCRIPTION_TYPE_IDLE, ignoredSourceOutputs);
-	} else if (printBoth) {
-		return PipeWire().init(SUBSCRIPTION_TYPE_DRY_BOTH,
-							  ignoredSourceOutputs);
-	} else if (printBothWayBar) {
-		return PipeWire().init(SUBSCRIPTION_TYPE_DRY_BOTH_WAYBAR,
-							  ignoredSourceOutputs);
-	} else if (printSink) {
-		return PipeWire().init(SUBSCRIPTION_TYPE_DRY_SINK,
-							  ignoredSourceOutputs);
-	} else if (printSource) {
-		return PipeWire().init(SUBSCRIPTION_TYPE_DRY_SOURCE,
-							  ignoredSourceOutputs);
-	}
-	return EXIT_SUCCESS;
+	if (subType == SUBSCRIPTION_TYPE_IDLE && isAlreadyRunning())
+		return EXIT_FAILURE;
+
+	return PipeWire().init(subType, ignoredSourceOutputs, ignoredSinkInputs);
 }

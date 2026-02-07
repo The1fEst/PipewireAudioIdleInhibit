@@ -52,8 +52,8 @@ Mkfile.old
 dkms.conf
 
 .cache/
-SwayAudioIdleInhibit
-sway-audio-idle-inhibit-git*
+PipewireAudioIdleInhibit
+pipewire-audio-idle-inhibit-git*
 pkg
 
-!build-scripts/sway-audio-idle-inhibit-git.rpkg.spec
+!build-scripts/pipewire-audio-idle-inhibit-git.rpkg.spec

@@ -40,6 +40,7 @@ struct PwContext {
 static void evaluate_streams(PwContext *ctx) {
 	bool sink_active = false;
 	bool source_active = false;
+	std::vector<std::string> active_apps;
 
 	for (const auto &pair : ctx->nodes) {
 		NodeData *node = pair.second;
@@ -59,15 +60,35 @@ static void evaluate_streams(PwContext *ctx) {
 					}
 				}
 			}
-			if (!ignore)
+			if (!ignore) {
 				source_active = true;
+				if (!node->app_name.empty())
+					active_apps.push_back(node->app_name);
+			}
 		} else if (node->media_class == "Stream/Input/Audio") {
-			sink_active = true;
+			bool ignore = false;
+			if (!node->app_name.empty() && ctx->data->ignoredSinkInputs) {
+				for (int i = 0; i < MAX_IGNORED_SINK_INPUTS; i++) {
+					if (ctx->data->ignoredSinkInputs[i] == nullptr)
+						break;
+					if (node->app_name ==
+						ctx->data->ignoredSinkInputs[i]) {
+						ignore = true;
+						break;
+					}
+				}
+			}
+			if (!ignore) {
+				sink_active = true;
+				if (!node->app_name.empty())
+					active_apps.push_back(node->app_name);
+			}
 		}
 	}
 
 	ctx->data->activeSink = sink_active;
 	ctx->data->activeSource = source_active;
+	ctx->data->activeApps = active_apps;
 
 	if (ctx->initial_sync_done) {
 		ctx->data->handleAction();
@@ -107,9 +128,9 @@ static void registry_global(void *data, uint32_t id, uint32_t permissions,
 
 	// Filter based on subscription type
 	SubscriptionType st = ctx->data->subscriptionType;
-	if (st == SUBSCRIPTION_TYPE_DRY_SINK && !is_sink)
+	if (st == SUBSCRIPTION_TYPE_DRY_INPUT && !is_sink)
 		return;
-	if (st == SUBSCRIPTION_TYPE_DRY_SOURCE && !is_source)
+	if (st == SUBSCRIPTION_TYPE_DRY_OUTPUT && !is_source)
 		return;
 
 	NodeData *node = new NodeData();
@@ -181,11 +202,13 @@ static const struct pw_core_events core_events = {
 };
 
 int PipeWire::init(SubscriptionType subscriptionType,
-				   char **ignoredSourceOutputs) {
+				   char **ignoredSourceOutputs,
+				   char **ignoredSinkInputs) {
 	pw_init(nullptr, nullptr);
 
 	PwContext *ctx = new PwContext();
-	ctx->data = new Data(subscriptionType, ignoredSourceOutputs);
+	ctx->data = new Data(subscriptionType, ignoredSourceOutputs,
+						 ignoredSinkInputs);
 
 	ctx->loop = pw_main_loop_new(nullptr);
 	if (!ctx->loop) {

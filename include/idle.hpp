@@ -20,6 +20,7 @@ class Idle {
 	int fd = -1;
 	int prev_lines = 0;
 
+	bool connect_bus();
 	void block();
 	void release_block();
 	void clear_prev_output();

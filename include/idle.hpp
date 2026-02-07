@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -12,16 +13,20 @@
 #include <elogind/sd-login.h>
 #endif
 
+struct AppActivity;
+
 class Idle {
 	struct sd_bus *bus = nullptr;
 	int fd = -1;
+	int prev_lines = 0;
 
 	void block();
 	void release_block();
+	void clear_prev_output();
 
   public:
 	Idle();
 
 	void update(bool activeSink, bool activeSource,
-			const std::vector<std::string> &activeApps);
+			const std::map<std::string, AppActivity> &activeApps);
 };

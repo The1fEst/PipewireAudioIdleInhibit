@@ -54,7 +54,7 @@ static bool is_ignored(const std::string &name, char **list, int max) {
 static void evaluate_streams(PwContext *ctx) {
 	bool sink_active = false;
 	bool source_active = false;
-	std::vector<std::string> active_apps;
+	std::map<std::string, AppActivity> active_apps;
 
 	for (const auto &pair : ctx->nodes) {
 		NodeData *node = pair.second;
@@ -73,8 +73,8 @@ static void evaluate_streams(PwContext *ctx) {
 				sink_active = true;
 				source_active = true;
 				if (!name.empty()) {
-					active_apps.push_back(name + " (input)");
-					active_apps.push_back(name + " (output)");
+					active_apps[name].input = true;
+					active_apps[name].output = true;
 				}
 			}
 			break;
@@ -82,14 +82,14 @@ static void evaluate_streams(PwContext *ctx) {
 			if (!ignored_out) {
 				source_active = true;
 				if (!name.empty())
-					active_apps.push_back(name + " (output)");
+					active_apps[name].output = true;
 			}
 			break;
 		case NodeType::Input:
 			if (!ignored_in) {
 				sink_active = true;
 				if (!name.empty())
-					active_apps.push_back(name + " (input)");
+					active_apps[name].input = true;
 			}
 			break;
 		}

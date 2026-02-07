@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -18,10 +19,15 @@ enum SubscriptionType {
 	SUBSCRIPTION_TYPE_DRY_OUTPUT,
 };
 
+struct AppActivity {
+	bool input = false;
+	bool output = false;
+};
+
 struct Data {
 	bool activeSource = false;
 	bool activeSink = false;
-	vector<string> activeApps;
+	map<string, AppActivity> activeApps;
 
 	SubscriptionType subscriptionType;
 

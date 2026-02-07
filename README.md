@@ -57,10 +57,17 @@ Run in the background to prevent idle when audio is active:
 pipewire-audio-idle-inhibit
 ```
 
-When audio starts playing or recording, the output shows:
+When audio starts playing or recording, the output shows an in-place updating table:
 ```
-IDLE INHIBITED by: Firefox Spotify
+IDLE INHIBITED
+AppName   | Input | Output
+----------|-------|---------
+Firefox   |       | *
+REAPER    | *     | *
+Discord   | *     |
 ```
+
+The table updates in-place as streams start and stop — no scrolling output.
 
 Add to your Hyprland config to auto-start:
 ```ini

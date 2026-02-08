@@ -2,19 +2,14 @@
 
 #include <map>
 #include <string>
-#include <vector>
 
 #include "config.hpp"
 #include "idle.hpp"
 
-using namespace std;
-
 enum SubscriptionType {
 	SUBSCRIPTION_TYPE_IDLE,
-	SUBSCRIPTION_TYPE_DRY_BOTH,
-	SUBSCRIPTION_TYPE_DRY_BOTH_WAYBAR,
-	SUBSCRIPTION_TYPE_DRY_INPUT,
-	SUBSCRIPTION_TYPE_DRY_OUTPUT,
+	SUBSCRIPTION_TYPE_MONITOR,
+	SUBSCRIPTION_TYPE_WAYBAR,
 };
 
 struct AppActivity {
@@ -25,18 +20,20 @@ struct AppActivity {
 struct Data {
 	bool activeSource = false;
 	bool activeSink = false;
-	map<string, AppActivity> activeApps;
+	std::map<std::string, AppActivity> activeApps;
 
 	SubscriptionType subscriptionType;
 	IgnoreConfig ignoreConfig;
 
-	Idle *idle = NULL;
+	Idle *idle = nullptr;
 
 	Data(SubscriptionType subscriptionType);
 
 	void handleAction();
 
   private:
-	void print(bool isRunning);
-	void printWayBar(bool activeSink, bool activeSource);
+	void printTable();
+	void printWayBar();
+	int prev_lines = 0;
+	void clearPrevOutput();
 };

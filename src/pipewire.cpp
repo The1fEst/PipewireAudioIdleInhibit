@@ -1,6 +1,5 @@
 #include <cerrno>
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
 #include <map>
 #include <set>
@@ -128,19 +127,9 @@ static void registry_global(void *data, uint32_t id, uint32_t permissions,
 	if (!is_output && !is_input && !is_jack)
 		return;
 
-	// Filter based on subscription type (JACK clients pass all filters
-	// since they are typically bidirectional)
-	if (!is_jack) {
-		SubscriptionType st = ctx->data->subscriptionType;
-		if (st == SUBSCRIPTION_TYPE_DRY_INPUT && !is_output)
-			return;
-		if (st == SUBSCRIPTION_TYPE_DRY_OUTPUT && !is_input)
-			return;
-	}
-
-NodeType node_type = is_jack ? NodeType::Jack
-					 : is_input ? NodeType::Input
-								   : NodeType::Output;
+	NodeType node_type = is_jack  ? NodeType::Jack
+						 : is_input ? NodeType::Input
+									 : NodeType::Output;
 
 	NodeData *node = new NodeData();
 	node->id = id;

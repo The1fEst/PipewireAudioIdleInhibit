@@ -7,6 +7,8 @@
 #include "data.hpp"
 #include "pipewire.hpp"
 
+using namespace std;
+
 #define LOCK_FILE "/tmp/pipewire-audio-idle-inhibit.lock"
 
 static void showHelp(char **argv) {
@@ -17,14 +19,10 @@ static void showHelp(char **argv) {
 	cout << "\t " << name
 		 << "\t Inhibits idle if either any input or any output is running\n";
 	cout << "\t -h, --help \t\t\t Show help options\n";
-	cout << "\t --both \t\t\t Don't inhibit idle and print if either "
-			"any input or any output is running\n";
-	cout << "\t --waybar \t\t\t Same as --both but outputs "
-			"in a waybar friendly manner\n";
-	cout << "\t --input \t\t\t Don't inhibit idle and print if any "
-			"input is running\n";
-	cout << "\t --output \t\t\t Don't inhibit idle and print if any "
-			"output is running\n";
+	cout << "\t --monitor \t\t\t Don't inhibit idle, show live "
+			"audio activity table\n";
+	cout << "\t --waybar \t\t\t Output in waybar-friendly "
+			"JSON format\n";
 	cout << "\nIgnore config file searched in order:\n";
 	cout << "\t $XDG_CONFIG_HOME/pipewire-audio-idle-inhibit/ignore.conf\n";
 	cout << "\t /etc/pipewire-audio-idle-inhibit/ignore.conf\n";
@@ -55,14 +53,10 @@ int main(int argc, char *argv[]) {
 		if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
 			showHelp(argv);
 			return EXIT_SUCCESS;
-		} else if (strcmp(argv[i], "--output") == 0) {
-			subType = SUBSCRIPTION_TYPE_DRY_OUTPUT;
-		} else if (strcmp(argv[i], "--input") == 0) {
-			subType = SUBSCRIPTION_TYPE_DRY_INPUT;
-		} else if (strcmp(argv[i], "--both") == 0) {
-			subType = SUBSCRIPTION_TYPE_DRY_BOTH;
+		} else if (strcmp(argv[i], "--monitor") == 0) {
+			subType = SUBSCRIPTION_TYPE_MONITOR;
 		} else if (strcmp(argv[i], "--waybar") == 0) {
-			subType = SUBSCRIPTION_TYPE_DRY_BOTH_WAYBAR;
+			subType = SUBSCRIPTION_TYPE_WAYBAR;
 		}
 	}
 

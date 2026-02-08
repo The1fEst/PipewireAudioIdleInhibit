@@ -6,7 +6,7 @@ A daemon that prevents the screen from sleeping while audio is actively playing 
 
 ## How It Works
 
-The daemon monitors the Pipewire audio system for active inputs (microphone/recording) and outputs (speakers/playback). When audio activity is detected, it sends an idle inhibit request to the systemd/elogind logind service, which prevents the screen from entering sleep mode. Once all audio stops, the inhibition is released. When idle is inhibited, the daemon prints which applications are responsible.
+The daemon monitors the Pipewire audio system for active inputs (microphone/recording) and outputs (speakers/playback). When audio activity is detected, it sends an idle inhibit request to the systemd/elogind logind service, which prevents the screen from entering sleep mode. Once all audio stops, the inhibition is released.
 
 Supports both **PulseAudio-style streams** and **PipeWire-JACK clients** (e.g. Guitarix, Ardour, REAPER, guitar amp simulators). JACK clients are detected and treated as bidirectional audio nodes, making it ideal for musicians and audio engineers.
 
@@ -57,17 +57,11 @@ Run in the background to prevent idle when audio is active:
 pipewire-audio-idle-inhibit
 ```
 
-When audio starts playing or recording, the output shows an in-place updating table:
+Output:
 ```
 IDLE INHIBITED
-AppName   | Input | Output
-----------|-------|---------
-Firefox   |       | *
-REAPER    | *     | *
-Discord   | *     |
+NOT IDLE INHIBITED
 ```
-
-The table updates in-place as streams start and stop — no scrolling output.
 
 Add to your Hyprland config to auto-start:
 ```ini
@@ -79,26 +73,27 @@ or Sway:
 exec pipewire-audio-idle-inhibit
 ```
 
-### Monitoring modes (dry-run)
+### Monitor mode
 
-Print the audio activity status without inhibiting idle:
-
-**Monitor both inputs and outputs:**
+Show a live in-place table of audio activity without inhibiting idle:
 ```bash
-pipewire-audio-idle-inhibit --both
+pipewire-audio-idle-inhibit --monitor
 ```
 
-**Monitor only audio output:**
-```bash
-pipewire-audio-idle-inhibit --output
+Example output:
+```
+AppName   | Input | Output
+----------|-------|---------
+Firefox   |       | *
+REAPER    | *     | *
+Discord   | *     |
 ```
 
-**Monitor only audio input:**
-```bash
-pipewire-audio-idle-inhibit --input
-```
+The table updates in-place as streams start and stop.
 
-**Waybar-friendly JSON output:**
+### Waybar mode
+
+Output JSON for Waybar integration:
 ```bash
 pipewire-audio-idle-inhibit --waybar
 ```

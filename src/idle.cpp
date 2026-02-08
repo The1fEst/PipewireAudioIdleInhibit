@@ -1,11 +1,8 @@
-#include <cassert>
 #include <cstdio>
 #include <fcntl.h>
-#include <iomanip>
 #include <iostream>
 #include <unistd.h>
 
-#include "data.hpp"
 #include "idle.hpp"
 
 using namespace std;
@@ -80,44 +77,12 @@ Idle::Idle() {
 	}
 }
 
-void Idle::clear_prev_output() {
-	if (prev_lines > 0) {
-		// Move cursor up and clear each line
-		for (int i = 0; i < prev_lines; i++)
-			cout << "\033[A\033[2K";
-		cout << "\r";
-	}
-}
-
-void Idle::update(bool activeSink, bool activeSource,
-				   const std::map<std::string, AppActivity> &activeApps) {
-	clear_prev_output();
-
-	if (activeSink || activeSource) {
+void Idle::update(bool active) {
+	if (active) {
 		block();
-
-		// Find max app name length for alignment
-		size_t max_len = 7; // minimum: "AppName"
-		for (const auto &pair : activeApps) {
-			if (pair.first.size() > max_len)
-				max_len = pair.first.size();
-		}
-
 		cout << "IDLE INHIBITED" << endl;
-		cout << left << setw(max_len) << "AppName"
-			 << " | Input | Output" << endl;
-		cout << string(max_len, '-')
-			 << "-|-------|---------" << endl;
-		for (const auto &pair : activeApps) {
-			cout << left << setw(max_len) << pair.first
-				 << " | " << (pair.second.input ? "*    " : "     ")
-				 << " | " << (pair.second.output ? "*" : " ") << endl;
-		}
-		// 1 (header) + 1 (column names) + 1 (separator) + rows
-		prev_lines = 3 + static_cast<int>(activeApps.size());
 	} else {
 		release_block();
 		cout << "NOT IDLE INHIBITED" << endl;
-		prev_lines = 1;
 	}
 }

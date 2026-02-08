@@ -89,7 +89,8 @@ static bool parse_config_file(const std::string& path, IgnoreConfig& config)
 		size_t arr_start = full_content.find('[', colon);
 		size_t arr_end = full_content.find(']', arr_start != std::string::npos ? arr_start : colon);
 
-		if (arr_start != std::string::npos && arr_end != std::string::npos && arr_start < colon + 10) {
+		if (arr_start != std::string::npos && arr_end != std::string::npos &&
+			arr_start < colon + 10) {
 			// Array value
 			std::string value = full_content.substr(arr_start, arr_end - arr_start + 1);
 
@@ -112,9 +113,8 @@ static bool parse_config_file(const std::string& path, IgnoreConfig& config)
 
 			std::string value = trim(full_content.substr(value_start, value_end - value_start));
 			// Remove quotes from value
-			if (value.size() >= 2 &&
-				((value.front() == '"' && value.back() == '"') ||
-				 (value.front() == '\'' && value.back() == '\''))) {
+			if (value.size() >= 2 && ((value.front() == '"' && value.back() == '"') ||
+									  (value.front() == '\'' && value.back() == '\''))) {
 				value = value.substr(1, value.size() - 2);
 			}
 

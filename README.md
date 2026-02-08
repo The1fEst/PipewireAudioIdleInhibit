@@ -1,12 +1,17 @@
 # Pipewire Audio Idle Inhibit
 
-A daemon that prevents the screen from sleeping while audio is actively playing or being recorded through Pipewire. Works with swayidle, hypridle, and other systemd-compatible idle inhibitors.
+A daemon that prevents the screen from sleeping while audio is actively playing or being recorded through Pipewire. Works with swayidle, hypridle, and other idle inhibitors.
 
-**Requires:** systemd or elogind for inhibit support. Pipewire.
+**Requires:** Pipewire. Optionally: systemd/elogind (for DBus inhibition) or Wayland compositor with `zwp_idle_inhibit_manager_v1` support.
 
 ## How It Works
 
-The daemon monitors the Pipewire audio system for active inputs (microphone/recording) and outputs (speakers/playback). When audio activity is detected, it sends an idle inhibit request to the systemd/elogind logind service, which prevents the screen from entering sleep mode. Once all audio stops, the inhibition is released.
+The daemon monitors the Pipewire audio system for active inputs (microphone/recording) and outputs (speakers/playback). When audio activity is detected, it sends an idle inhibit request via either:
+
+- **Wayland** (default) — Uses the `zwp_idle_inhibit_manager_v1` protocol directly. Works with Sway, Hyprland, and other Wayland compositors that support this protocol.
+- **systemd/elogind** — Uses D-Bus to call `org.freedesktop.login1.Manager.Inhibit`.
+
+The inhibition method is selected in the config file. If Wayland is unavailable at runtime, it automatically falls back to systemd.
 
 Supports both **PulseAudio-style streams** and **PipeWire-JACK clients** (e.g. Guitarix, Ardour, REAPER, guitar amp simulators). JACK clients are detected and treated as bidirectional audio nodes, making it ideal for musicians and audio engineers.
 
@@ -36,18 +41,20 @@ meson install -C build
 
 **Arch Linux:**
 ```bash
-pacman -Syu base-devel meson pkgconf systemd pipewire
+pacman -Syu base-devel meson pkgconf systemd pipewire wayland wayland-protocols
 ```
 
 **Debian/Ubuntu (systemd):**
 ```bash
-apt install meson pkgconf libsystemd-dev libpipewire-0.3-dev
+apt install meson pkgconf libsystemd-dev libpipewire-0.3-dev libwayland-dev wayland-protocols
 ```
 
 **Fedora/RHEL (systemd):**
 ```bash
-dnf install meson pkgconf systemd-devel pipewire-devel
+dnf install meson pkgconf systemd-devel pipewire-devel wayland-devel wayland-protocols-devel
 ```
+
+> **Note:** Wayland support is optional. If `wayland-client` and `wayland-protocols` are not found at build time, the daemon will only support systemd/elogind inhibition.
 
 ## Usage
 
@@ -129,7 +136,10 @@ cp /usr/share/pipewire-audio-idle-inhibit/config.json ~/.config/pipewire-audio-i
     output: ["Firefox", "Spotify"],
 
     # Ignore these apps for both input and output
-    both: ["mpv"]
+    both: ["mpv"],
+
+    # Idle inhibition method: "wayland" (default) or "systemd"
+    inhibition_type: wayland
 }
 ```
 

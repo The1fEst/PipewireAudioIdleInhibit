@@ -10,7 +10,7 @@ Data::Data(SubscriptionType subscriptionType)
 	: subscriptionType(subscriptionType), ignoreConfig(load_ignore_config())
 {
 	if (subscriptionType == SUBSCRIPTION_TYPE_IDLE)
-		idle = new Idle();
+		idle = new Idle(ignoreConfig.inhibition_type);
 }
 
 void Data::clearPrevOutput()

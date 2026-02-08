@@ -18,8 +18,8 @@ struct AppActivity {
 };
 
 struct Data {
-	bool activeSource = false;
-	bool activeSink = false;
+	bool activeOutput = false;
+	bool activeInput = false;
 	std::map<std::string, AppActivity> activeApps;
 
 	SubscriptionType subscriptionType;

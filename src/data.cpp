@@ -26,7 +26,7 @@ void Data::handleAction()
 {
 	switch (subscriptionType) {
 	case SUBSCRIPTION_TYPE_IDLE:
-		idle->update(activeSink || activeSource);
+		idle->update(activeInput || activeOutput);
 		break;
 	case SUBSCRIPTION_TYPE_MONITOR:
 		printTable();
@@ -41,7 +41,7 @@ void Data::printTable()
 {
 	clearPrevOutput();
 
-	if (!activeSink && !activeSource) {
+	if (!activeInput && !activeOutput) {
 		cout << "NOT RUNNING" << endl;
 		prev_lines = 1;
 		return;
@@ -53,7 +53,7 @@ void Data::printTable()
 			max_len = pair.first.size();
 	}
 
-	cout << left << setw(max_len) << "AppName"
+	cout << left << setw(max_len) << "App"
 		 << " | Input | Output" << endl;
 	cout << string(max_len, '-') << "-|-------|---------" << endl;
 	for (const auto& pair : activeApps) {
@@ -66,7 +66,7 @@ void Data::printTable()
 
 void Data::printWayBar()
 {
-	string result[2] = {activeSink ? "output" : "", activeSource ? "input" : ""};
+	string result[2] = {activeInput ? "input" : "", activeOutput ? "output" : ""};
 	string text;
 	for (const auto& str : result) {
 		if (!text.empty() && !str.empty())

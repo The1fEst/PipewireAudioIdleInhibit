@@ -48,8 +48,8 @@ static bool is_ignored(const std::string& name, const std::set<std::string>& ign
 
 static void evaluate_streams(PwContext* ctx)
 {
-	bool sink_active = false;
-	bool source_active = false;
+	bool input_active = false;
+	bool output_active = false;
 	std::map<std::string, AppActivity> active_apps;
 
 	for (const auto& pair : ctx->nodes) {
@@ -64,8 +64,8 @@ static void evaluate_streams(PwContext* ctx)
 		switch (node->type) {
 		case NodeType::Jack:
 			if (!ignored_out && !ignored_in) {
-				sink_active = true;
-				source_active = true;
+				input_active = true;
+				output_active = true;
 				if (!name.empty()) {
 					active_apps[name].input = true;
 					active_apps[name].output = true;
@@ -74,14 +74,14 @@ static void evaluate_streams(PwContext* ctx)
 			break;
 		case NodeType::Output:
 			if (!ignored_out) {
-				source_active = true;
+				output_active = true;
 				if (!name.empty())
 					active_apps[name].output = true;
 			}
 			break;
 		case NodeType::Input:
 			if (!ignored_in) {
-				sink_active = true;
+				input_active = true;
 				if (!name.empty())
 					active_apps[name].input = true;
 			}
@@ -89,8 +89,8 @@ static void evaluate_streams(PwContext* ctx)
 		}
 	}
 
-	ctx->data->activeSink = sink_active;
-	ctx->data->activeSource = source_active;
+	ctx->data->activeInput = input_active;
+	ctx->data->activeOutput = output_active;
 	ctx->data->activeApps = active_apps;
 
 	if (ctx->initial_sync_done)

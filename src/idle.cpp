@@ -7,22 +7,23 @@
 
 using namespace std;
 
-bool Idle::connect_bus() {
+bool Idle::connect_bus()
+{
 	if (bus) {
 		sd_bus_unref(bus);
 		bus = nullptr;
 	}
 	int ret = sd_bus_default_system(&bus);
 	if (ret < 0) {
-		fprintf(stderr, "Failed to get DBus connection: %s\n",
-				strerror(-ret));
+		fprintf(stderr, "Failed to get DBus connection: %s\n", strerror(-ret));
 		bus = nullptr;
 		return false;
 	}
 	return true;
 }
 
-void Idle::block() {
+void Idle::block()
+{
 	// Skip if already inhibiting
 	if (fd >= 0)
 		return;
@@ -30,12 +31,12 @@ void Idle::block() {
 	if (!bus && !connect_bus())
 		return;
 
-	sd_bus_message *message = nullptr;
+	sd_bus_message* message = nullptr;
 	sd_bus_error error = SD_BUS_ERROR_NULL;
-	int ret = sd_bus_call_method(
-		bus, "org.freedesktop.login1", "/org/freedesktop/login1",
-		"org.freedesktop.login1.Manager", "Inhibit", &error, &message, "ssss",
-		"idle", "pipewire-audio-idle-inhibit", "Audio is playing", "block");
+	int ret =
+		sd_bus_call_method(bus, "org.freedesktop.login1", "/org/freedesktop/login1",
+						   "org.freedesktop.login1.Manager", "Inhibit", &error, &message, "ssss",
+						   "idle", "pipewire-audio-idle-inhibit", "Audio is playing", "block");
 	if (ret < 0) {
 		fprintf(stderr, "Could not send inhibit signal: %s: %s\n",
 				error.name ? error.name : "unknown",
@@ -64,20 +65,23 @@ void Idle::block() {
 	sd_bus_message_unref(message);
 }
 
-void Idle::release_block() {
+void Idle::release_block()
+{
 	if (fd >= 0) {
 		close(fd);
 		fd = -1;
 	}
 }
 
-Idle::Idle() {
+Idle::Idle()
+{
 	if (!connect_bus()) {
 		fprintf(stderr, "Warning: DBus not available yet, will retry\n");
 	}
 }
 
-void Idle::update(bool active) {
+void Idle::update(bool active)
+{
 	if (active) {
 		block();
 		cout << "IDLE INHIBITED" << endl;

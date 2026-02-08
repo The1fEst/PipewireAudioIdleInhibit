@@ -12,8 +12,9 @@
 #include <elogind/sd-login.h>
 #endif
 
-class Idle {
-	struct sd_bus *bus = nullptr;
+class Idle
+{
+	struct sd_bus* bus = nullptr;
 	int fd = -1;
 
 	bool connect_bus();

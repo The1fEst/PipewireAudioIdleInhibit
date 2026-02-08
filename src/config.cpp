@@ -8,7 +8,8 @@
 #include "config.hpp"
 
 // Trim whitespace from both ends
-static std::string trim(const std::string &s) {
+static std::string trim(const std::string& s)
+{
 	size_t start = s.find_first_not_of(" \t\r\n");
 	if (start == std::string::npos)
 		return "";
@@ -17,7 +18,8 @@ static std::string trim(const std::string &s) {
 }
 
 // Strip inline comments (# not inside quotes)
-static std::string strip_comment(const std::string &s) {
+static std::string strip_comment(const std::string& s)
+{
 	size_t pos = s.find('#');
 	if (pos == std::string::npos)
 		return s;
@@ -25,7 +27,8 @@ static std::string strip_comment(const std::string &s) {
 }
 
 // Parse a JSON-like array: ["item1", "item2"]
-static void parse_array(const std::string &value, std::set<std::string> &out) {
+static void parse_array(const std::string& value, std::set<std::string>& out)
+{
 	// Find content between [ and ]
 	size_t start = value.find('[');
 	size_t end = value.rfind(']');
@@ -38,9 +41,8 @@ static void parse_array(const std::string &value, std::set<std::string> &out) {
 	while (std::getline(ss, token, ',')) {
 		token = trim(token);
 		// Remove surrounding quotes
-		if (token.size() >= 2 &&
-			((token.front() == '"' && token.back() == '"') ||
-			 (token.front() == '\'' && token.back() == '\''))) {
+		if (token.size() >= 2 && ((token.front() == '"' && token.back() == '"') ||
+								  (token.front() == '\'' && token.back() == '\''))) {
 			token = token.substr(1, token.size() - 2);
 		}
 		token = trim(token);
@@ -49,7 +51,8 @@ static void parse_array(const std::string &value, std::set<std::string> &out) {
 	}
 }
 
-static bool parse_config_file(const std::string &path, IgnoreConfig &config) {
+static bool parse_config_file(const std::string& path, IgnoreConfig& config)
+{
 	std::ifstream file(path);
 	if (!file.is_open())
 		return false;
@@ -74,12 +77,11 @@ static bool parse_config_file(const std::string &path, IgnoreConfig &config) {
 
 		std::string key = trim(full_content.substr(pos, colon - pos));
 		// Remove leading { , } or quotes from key
-		while (!key.empty() && (key.front() == '{' || key.front() == '}' ||
-								key.front() == ',' || key.front() == '"' ||
-								key.front() == '\'' || key.front() == '\n'))
+		while (!key.empty() && (key.front() == '{' || key.front() == '}' || key.front() == ',' ||
+								key.front() == '"' || key.front() == '\'' || key.front() == '\n'))
 			key.erase(0, 1);
-		while (!key.empty() && (key.back() == '"' || key.back() == '\'' ||
-								key.back() == ',' || key.back() == '}'))
+		while (!key.empty() &&
+			   (key.back() == '"' || key.back() == '\'' || key.back() == ',' || key.back() == '}'))
 			key.pop_back();
 		key = trim(key);
 
@@ -108,22 +110,21 @@ static bool parse_config_file(const std::string &path, IgnoreConfig &config) {
 	return true;
 }
 
-IgnoreConfig load_ignore_config() {
+IgnoreConfig load_ignore_config()
+{
 	IgnoreConfig config;
 
 	// Search paths in priority order
 	std::vector<std::string> paths;
 
 	// 1. $XDG_CONFIG_HOME/pipewire-audio-idle-inhibit/ignore.conf
-	const char *xdg = getenv("XDG_CONFIG_HOME");
+	const char* xdg = getenv("XDG_CONFIG_HOME");
 	if (xdg && xdg[0] != '\0') {
-		paths.push_back(std::string(xdg) +
-						"/pipewire-audio-idle-inhibit/ignore.conf");
+		paths.push_back(std::string(xdg) + "/pipewire-audio-idle-inhibit/ignore.conf");
 	} else {
-		const char *home = getenv("HOME");
+		const char* home = getenv("HOME");
 		if (home) {
-			paths.push_back(std::string(home) +
-							"/.config/pipewire-audio-idle-inhibit/ignore.conf");
+			paths.push_back(std::string(home) + "/.config/pipewire-audio-idle-inhibit/ignore.conf");
 		}
 	}
 
@@ -133,7 +134,7 @@ IgnoreConfig load_ignore_config() {
 	// 3. /usr/share/pipewire-audio-idle-inhibit/ignore.conf
 	paths.push_back("/usr/share/pipewire-audio-idle-inhibit/ignore.conf");
 
-	for (const auto &path : paths) {
+	for (const auto& path : paths) {
 		if (parse_config_file(path, config))
 			return config;
 	}

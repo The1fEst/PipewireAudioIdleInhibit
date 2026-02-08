@@ -1,10 +1,51 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
 root = true
 
-# Unix-style newlines with a newline ending every file
+
+# ───────────────────────────────────────────────
+# GENERAL
+# ───────────────────────────────────────────────
+
 [*]
 end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
 insert_final_newline = true
 
-[*.{h,c,hpp,cpp}]
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{json,yml,yaml}]
+indent_style = space
+indent_size = 2
+
+[*.{sh,bash}]
+indent_style = space
+indent_size = 2
+
+[meson.build]
+indent_style = space
+indent_size = 4
+
+
+# ───────────────────────────────────────────────
+# C/C++ FILES
+# ───────────────────────────────────────────────
+
+[*.{h,hpp,c,cpp,cc,cxx}]
 indent_style = tab
 indent_size = 4
+
+# Line breaking and braces
+# K&R style: opening brace on same line, else/catch/finally on new line
+indent_brace_style = k_and_r
+max_line_length = 100
+
+# Naming conventions
+# Classes, structs, enums = PascalCase
+# Functions, variables = camelCase or snake_case
+# Private members = optional _ prefix (snake_case)
+# Constants = UPPER_CASE or PascalCase
+# Macros = UPPER_CASE

@@ -2,7 +2,8 @@
 
 #include "data.hpp"
 
-class PipeWire {
+class PipeWire
+{
   public:
 	int init(SubscriptionType subscriptionType);
 };

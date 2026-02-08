@@ -11,13 +11,13 @@ using namespace std;
 
 #define LOCK_FILE "/tmp/pipewire-audio-idle-inhibit.lock"
 
-static void showHelp(char **argv) {
+static void showHelp(char** argv)
+{
 	string name = basename(argv[0]);
 	cout << "Usage:\n";
 	cout << "\t" << name << " <OPTION>\n";
 	cout << "Options:\n";
-	cout << "\t " << name
-		 << "\t Inhibits idle if either any input or any output is running\n";
+	cout << "\t " << name << "\t Inhibits idle if either any input or any output is running\n";
 	cout << "\t -h, --help \t\t\t Show help options\n";
 	cout << "\t --monitor \t\t\t Don't inhibit idle, show live "
 			"audio activity table\n";
@@ -29,8 +29,9 @@ static void showHelp(char **argv) {
 	cout << "\t /usr/share/pipewire-audio-idle-inhibit/ignore.conf\n";
 }
 
-static bool isAlreadyRunning() {
-	FILE *fd = fopen(LOCK_FILE, "w+");
+static bool isAlreadyRunning()
+{
+	FILE* fd = fopen(LOCK_FILE, "w+");
 	if (!fd) {
 		fprintf(stderr, "Could not open lock file: %s\n", LOCK_FILE);
 		return true;
@@ -46,7 +47,8 @@ static bool isAlreadyRunning() {
 	return false;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[])
+{
 	SubscriptionType subType = SUBSCRIPTION_TYPE_IDLE;
 
 	for (int i = 1; i < argc; i++) {

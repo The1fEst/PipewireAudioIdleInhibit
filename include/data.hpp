@@ -25,7 +25,7 @@ struct Data {
 	SubscriptionType subscriptionType;
 	IgnoreConfig ignoreConfig;
 
-	Idle *idle = nullptr;
+	Idle* idle = nullptr;
 
 	Data(SubscriptionType subscriptionType);
 

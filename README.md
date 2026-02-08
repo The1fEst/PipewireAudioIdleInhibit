@@ -73,6 +73,11 @@ or Sway:
 exec pipewire-audio-idle-inhibit
 ```
 
+or systemd:
+```ini
+systemctl --user enable --now pipewire-audio-idle-inhibit.service
+```
+
 ### Monitor mode
 
 Show a live in-place table of audio activity without inhibiting idle:

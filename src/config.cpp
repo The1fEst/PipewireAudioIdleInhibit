@@ -67,7 +67,7 @@ static bool parse_config_file(const std::string& path, IgnoreConfig& config)
 	}
 
 	// Simple key: value parser for our JSON-like format
-	// Handles multi-line arrays by collecting everything between { }
+	// Handles both arrays and string values
 	size_t pos = 0;
 	while (pos < full_content.size()) {
 		// Find a key
@@ -85,26 +85,45 @@ static bool parse_config_file(const std::string& path, IgnoreConfig& config)
 			key.pop_back();
 		key = trim(key);
 
-		// Find the array value - collect until we find ]
+		// Check if value is an array (starts with [)
 		size_t arr_start = full_content.find('[', colon);
 		size_t arr_end = full_content.find(']', arr_start != std::string::npos ? arr_start : colon);
-		if (arr_start == std::string::npos || arr_end == std::string::npos) {
-			pos = colon + 1;
-			continue;
+
+		if (arr_start != std::string::npos && arr_end != std::string::npos && arr_start < colon + 10) {
+			// Array value
+			std::string value = full_content.substr(arr_start, arr_end - arr_start + 1);
+
+			if (key == "input") {
+				parse_array(value, config.input);
+			} else if (key == "output") {
+				parse_array(value, config.output);
+			} else if (key == "both") {
+				parse_array(value, config.input);
+				parse_array(value, config.output);
+			}
+
+			pos = arr_end + 1;
+		} else {
+			// String value - find until comma or closing brace
+			size_t value_start = colon + 1;
+			size_t value_end = full_content.find_first_of(",}", value_start);
+			if (value_end == std::string::npos)
+				value_end = full_content.size();
+
+			std::string value = trim(full_content.substr(value_start, value_end - value_start));
+			// Remove quotes from value
+			if (value.size() >= 2 &&
+				((value.front() == '"' && value.back() == '"') ||
+				 (value.front() == '\'' && value.back() == '\''))) {
+				value = value.substr(1, value.size() - 2);
+			}
+
+			if (key == "inhibition_type") {
+				config.inhibition_type = value;
+			}
+
+			pos = value_end + 1;
 		}
-
-		std::string value = full_content.substr(arr_start, arr_end - arr_start + 1);
-
-		if (key == "input") {
-			parse_array(value, config.input);
-		} else if (key == "output") {
-			parse_array(value, config.output);
-		} else if (key == "both") {
-			parse_array(value, config.input);
-			parse_array(value, config.output);
-		}
-
-		pos = arr_end + 1;
 	}
 
 	return true;
@@ -117,22 +136,22 @@ IgnoreConfig load_ignore_config()
 	// Search paths in priority order
 	std::vector<std::string> paths;
 
-	// 1. $XDG_CONFIG_HOME/pipewire-audio-idle-inhibit/ignore.conf
+	// 1. $XDG_CONFIG_HOME/pipewire-audio-idle-inhibit/config.json
 	const char* xdg = getenv("XDG_CONFIG_HOME");
 	if (xdg && xdg[0] != '\0') {
-		paths.push_back(std::string(xdg) + "/pipewire-audio-idle-inhibit/ignore.conf");
+		paths.push_back(std::string(xdg) + "/pipewire-audio-idle-inhibit/config.json");
 	} else {
 		const char* home = getenv("HOME");
 		if (home) {
-			paths.push_back(std::string(home) + "/.config/pipewire-audio-idle-inhibit/ignore.conf");
+			paths.push_back(std::string(home) + "/.config/pipewire-audio-idle-inhibit/config.json");
 		}
 	}
 
-	// 2. /etc/pipewire-audio-idle-inhibit/ignore.conf
-	paths.push_back("/etc/pipewire-audio-idle-inhibit/ignore.conf");
+	// 2. /etc/pipewire-audio-idle-inhibit/config.json
+	paths.push_back("/etc/pipewire-audio-idle-inhibit/config.json");
 
-	// 3. /usr/share/pipewire-audio-idle-inhibit/ignore.conf
-	paths.push_back("/usr/share/pipewire-audio-idle-inhibit/ignore.conf");
+	// 3. /usr/share/pipewire-audio-idle-inhibit/config.json
+	paths.push_back("/usr/share/pipewire-audio-idle-inhibit/config.json");
 
 	for (const auto& path : paths) {
 		if (parse_config_file(path, config))

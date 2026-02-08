@@ -33,8 +33,13 @@ add_project_arguments(
 )
 
 logind_dep = dependency('lib' + get_option('logind-provider'), required: true)
+wayland_dep = dependency('wayland-client', required: false)
 
 add_project_arguments('-D', 'HAVE_' + get_option('logind-provider').to_upper(), language: 'cpp')
+
+if wayland_dep.found()
+	add_project_arguments('-DHAVE_WAYLAND', language: 'cpp')
+endif
 
 # Systemd service unit
 if get_option('logind-provider') == 'systemd'
@@ -67,12 +72,13 @@ executable(
 	dependencies: [
 		dependency('libpipewire-0.3'),
 		logind_dep,
+		wayland_dep,
 	],
 	install: true,
 )
 
-# Default ignore config
+# Default config
 install_data(
-	'config/ignore.conf',
+	'config/config.json',
 	install_dir: join_paths(get_option('datadir'), 'pipewire-audio-idle-inhibit'),
 )

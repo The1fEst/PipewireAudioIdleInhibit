@@ -108,15 +108,15 @@ pipewire-audio-idle-inhibit --waybar
 Exclude certain applications from triggering the idle inhibitor using a config file.
 
 The config file is searched in the following order (first found wins):
-1. `$XDG_CONFIG_HOME/pipewire-audio-idle-inhibit/ignore.conf`
-2. `/etc/pipewire-audio-idle-inhibit/ignore.conf`
-3. `/usr/share/pipewire-audio-idle-inhibit/ignore.conf`
+1. `$XDG_CONFIG_HOME/pipewire-audio-idle-inhibit/config.json`
+2. `/etc/pipewire-audio-idle-inhibit/config.json`
+3. `/usr/share/pipewire-audio-idle-inhibit/config.json`
 
-A default example config is installed to `/usr/share/pipewire-audio-idle-inhibit/ignore.conf`. Copy it to customize:
+A default example config is installed to `/usr/share/pipewire-audio-idle-inhibit/config.json`. Copy it to customize:
 
 ```bash
 mkdir -p ~/.config/pipewire-audio-idle-inhibit
-cp /usr/share/pipewire-audio-idle-inhibit/ignore.conf ~/.config/pipewire-audio-idle-inhibit/
+cp /usr/share/pipewire-audio-idle-inhibit/config.json ~/.config/pipewire-audio-idle-inhibit/
 ```
 
 **Config format:**

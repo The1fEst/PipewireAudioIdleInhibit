@@ -24,9 +24,9 @@ static void showHelp(char** argv)
 	cout << "\t --waybar \t\t\t Output in waybar-friendly "
 			"JSON format\n";
 	cout << "\nIgnore config file searched in order:\n";
-	cout << "\t $XDG_CONFIG_HOME/pipewire-audio-idle-inhibit/ignore.conf\n";
-	cout << "\t /etc/pipewire-audio-idle-inhibit/ignore.conf\n";
-	cout << "\t /usr/share/pipewire-audio-idle-inhibit/ignore.conf\n";
+	cout << "\t $XDG_CONFIG_HOME/pipewire-audio-idle-inhibit/config.json\n";
+	cout << "\t /etc/pipewire-audio-idle-inhibit/config.json\n";
+	cout << "\t /usr/share/pipewire-audio-idle-inhibit/config.json\n";
 }
 
 static bool isAlreadyRunning()

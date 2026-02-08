@@ -4,9 +4,9 @@
 # Use the app name as shown in the inhibition table output.
 #
 # Config file search order (first found wins):
-#   $XDG_CONFIG_HOME/pipewire-audio-idle-inhibit/ignore.conf
-#   /etc/pipewire-audio-idle-inhibit/ignore.conf
-#   /usr/share/pipewire-audio-idle-inhibit/ignore.conf
+#   $XDG_CONFIG_HOME/pipewire-audio-idle-inhibit/config.json
+#   /etc/pipewire-audio-idle-inhibit/config.json
+#   /usr/share/pipewire-audio-idle-inhibit/config.json
 
 {
     # Ignore these apps only for input (microphone/recording)
@@ -16,5 +16,8 @@
     output: [],
 
     # Ignore these apps for both input and output
-    both: []
+    both: [],
+
+    # Idle inhibition method: "wayland" (default) or "systemd"
+    inhibition_type: wayland
 }

@@ -7,26 +7,24 @@
 #include "data.hpp"
 #include "pipewire.hpp"
 
-using namespace std;
-
 #define LOCK_FILE "/tmp/pipewire-audio-idle-inhibit.lock"
 
 static void showHelp(char** argv)
 {
-	string name = basename(argv[0]);
-	cout << "Usage:\n";
-	cout << "\t" << name << " <OPTION>\n";
-	cout << "Options:\n";
-	cout << "\t " << name << "\t Inhibits idle if either any input or any output is running\n";
-	cout << "\t -h, --help \t\t\t Show help options\n";
-	cout << "\t --monitor \t\t\t Don't inhibit idle, show live "
-			"audio activity table\n";
-	cout << "\t --waybar \t\t\t Output in waybar-friendly "
-			"JSON format\n";
-	cout << "\nIgnore config file searched in order:\n";
-	cout << "\t $XDG_CONFIG_HOME/pipewire-audio-idle-inhibit/config.json\n";
-	cout << "\t /etc/pipewire-audio-idle-inhibit/config.json\n";
-	cout << "\t /usr/share/pipewire-audio-idle-inhibit/config.json\n";
+	std::string name = basename(argv[0]);
+	std::cout << "Usage:\n";
+	std::cout << "\t" << name << " <OPTION>\n";
+	std::cout << "Options:\n";
+	std::cout << "\t " << name << "\t Inhibits idle if either any input or any output is running\n";
+	std::cout << "\t -h, --help \t\t\t Show help options\n";
+	std::cout << "\t --monitor \t\t\t Don't inhibit idle, show live "
+			 "audio activity table\n";
+	std::cout << "\t --waybar \t\t\t Output in waybar-friendly "
+			 "JSON format\n";
+	std::cout << "\nConfig file searched in order:\n";
+	std::cout << "\t $XDG_CONFIG_HOME/pipewire-audio-idle-inhibit/config.json\n";
+	std::cout << "\t /etc/pipewire-audio-idle-inhibit/config.json\n";
+	std::cout << "\t /usr/share/pipewire-audio-idle-inhibit/config.json\n";
 }
 
 static bool isAlreadyRunning()
@@ -36,7 +34,7 @@ static bool isAlreadyRunning()
 		fprintf(stderr, "Could not open lock file: %s\n", LOCK_FILE);
 		return true;
 	}
-	if (flock(fd->_fileno, LOCK_EX | LOCK_NB) < 0) {
+	if (flock(fileno(fd), LOCK_EX | LOCK_NB) < 0) {
 		if (errno == EWOULDBLOCK) {
 			fprintf(stderr, "An instance is already running\n");
 		} else {

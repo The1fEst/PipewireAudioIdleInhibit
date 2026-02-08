@@ -1,6 +1,5 @@
 #include <cstdio>
 #include <fcntl.h>
-#include <iostream>
 #include <unistd.h>
 
 #include "idle.hpp"
@@ -8,8 +7,6 @@
 #ifdef HAVE_WAYLAND
 #include "idle-inhibit-unstable-v1-client-protocol.h"
 #endif
-
-using namespace std;
 
 // ─── systemd/elogind backend ─────────────────
 
@@ -238,7 +235,6 @@ void Idle::update(bool active)
 		else
 #endif
 			block_systemd();
-		cout << "IDLE INHIBITED" << endl;
 	} else {
 #ifdef HAVE_WAYLAND
 		if (inhibition_type == "wayland")
@@ -246,6 +242,5 @@ void Idle::update(bool active)
 		else
 #endif
 			release_systemd();
-		cout << "NOT IDLE INHIBITED" << endl;
 	}
 }

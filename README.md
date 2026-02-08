@@ -41,17 +41,17 @@ meson install -C build
 
 **Arch Linux:**
 ```bash
-pacman -Syu base-devel meson pkgconf systemd pipewire wayland wayland-protocols
+pacman -Syu base-devel meson pkgconf systemd pipewire wayland wayland-protocols jq
 ```
 
 **Debian/Ubuntu (systemd):**
 ```bash
-apt install meson pkgconf libsystemd-dev libpipewire-0.3-dev libwayland-dev wayland-protocols
+apt install meson pkgconf libsystemd-dev libpipewire-0.3-dev libwayland-dev wayland-protocols libjq-dev
 ```
 
 **Fedora/RHEL (systemd):**
 ```bash
-dnf install meson pkgconf systemd-devel pipewire-devel wayland-devel wayland-protocols-devel
+dnf install meson pkgconf systemd-devel pipewire-devel wayland-devel wayland-protocols-devel jq-devel
 ```
 
 > **Note:** Wayland support is optional. If `wayland-client` and `wayland-protocols` are not found at build time, the daemon will only support systemd/elogind inhibition.
@@ -129,19 +129,17 @@ cp /usr/share/pipewire-audio-idle-inhibit/config.json ~/.config/pipewire-audio-i
 **Config format:**
 ```json
 {
-    # Ignore these apps only for input (microphone/recording)
-    input: ["Discord", "Zoom"],
-
-    # Ignore these apps only for output (speakers/playback)
-    output: ["Firefox", "Spotify"],
-
-    # Ignore these apps for both input and output
-    both: ["mpv"],
-
-    # Idle inhibition method: "wayland" (default) or "systemd"
-    inhibition_type: wayland
+    "input": ["Discord", "Zoom"],
+    "output": ["Firefox", "Spotify"],
+    "both": ["mpv"],
+    "inhibition_type": "wayland"
 }
 ```
+
+- `input` — ignore these apps for input (microphone/recording)
+- `output` — ignore these apps for output (speakers/playback)
+- `both` — ignore these apps for both input and output
+- `inhibition_type` — `"wayland"` (default) or `"systemd"`
 
 ## Waybar Integration
 

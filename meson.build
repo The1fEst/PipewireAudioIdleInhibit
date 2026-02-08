@@ -95,6 +95,7 @@ executable(
 		dependency('libpipewire-0.3'),
 		logind_dep,
 		wayland_dep,
+		dependency('libjq'),
 	],
 	install: true,
 )

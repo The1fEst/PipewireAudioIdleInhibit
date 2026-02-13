@@ -19,6 +19,7 @@ struct NodeData {
 	uint32_t id;
 	NodeType type;
 	std::string app_name;
+	std::string media_name;
 	enum pw_node_state state = PW_NODE_STATE_CREATING;
 	struct pw_proxy* proxy = nullptr;
 	struct spa_hook listener = {};
@@ -63,7 +64,7 @@ static void evaluate_streams(PwContext* ctx)
 			continue;
 
 		const auto& name = node->app_name;
-		if (contains_dummy(name))
+		if (contains_dummy(node->media_name))
 			continue;
 
 		bool ignored_out = is_ignored(name, ctx->data->ignoreConfig.output);
@@ -109,6 +110,13 @@ static void node_info(void* object, const struct pw_node_info* info)
 {
 	NodeData* node = static_cast<NodeData*>(object);
 	node->state = info->state;
+
+	if (info->props) {
+		const char* media = spa_dict_lookup(info->props, PW_KEY_MEDIA_NAME);
+		if (media)
+			node->media_name = media;
+	}
+
 	evaluate_streams(node->ctx);
 }
 

@@ -18,8 +18,10 @@ enum class NodeType { Output, Input, Jack };
 struct NodeData {
 	uint32_t id;
 	NodeType type;
+	bool is_pulse = false;
 	std::string app_name;
 	std::string media_name;
+	std::string target_name;
 	enum pw_node_state state = PW_NODE_STATE_CREATING;
 	struct pw_proxy* proxy = nullptr;
 	struct spa_hook listener = {};
@@ -64,7 +66,10 @@ static void evaluate_streams(PwContext* ctx)
 			continue;
 
 		const auto& name = node->app_name;
-		if (contains_dummy(node->media_name))
+		// Skip streams routed to dummy devices:
+		// media.name for pipewire-pulse, target.object for native pipewire
+		if (node->is_pulse ? contains_dummy(node->media_name)
+							: contains_dummy(node->target_name))
 			continue;
 
 		bool ignored_out = is_ignored(name, ctx->data->ignoreConfig.output);
@@ -115,6 +120,9 @@ static void node_info(void* object, const struct pw_node_info* info)
 		const char* media = spa_dict_lookup(info->props, PW_KEY_MEDIA_NAME);
 		if (media)
 			node->media_name = media;
+		const char* target = spa_dict_lookup(info->props, PW_KEY_TARGET_OBJECT);
+		if (target)
+			node->target_name = target;
 	}
 
 	evaluate_streams(node->ctx);
@@ -150,6 +158,7 @@ static void registry_global(void* data, uint32_t id, uint32_t permissions, const
 	NodeData* node = new NodeData();
 	node->id = id;
 	node->type = node_type;
+	node->is_pulse = client_api && strcmp(client_api, "pipewire-pulse") == 0;
 	node->ctx = ctx;
 
 	const char* app_name = spa_dict_lookup(props, PW_KEY_APP_NAME);

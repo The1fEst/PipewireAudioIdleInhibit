@@ -46,6 +46,11 @@ static bool is_ignored(const std::string& name, const std::set<std::string>& ign
 	return ignore_set.count(name) > 0;
 }
 
+static bool contains_dummy(const std::string& name)
+{
+	return name.find("dummy") != std::string::npos;
+}
+
 static void evaluate_streams(PwContext* ctx)
 {
 	bool input_active = false;
@@ -58,6 +63,9 @@ static void evaluate_streams(PwContext* ctx)
 			continue;
 
 		const auto& name = node->app_name;
+		if (contains_dummy(name))
+			continue;
+
 		bool ignored_out = is_ignored(name, ctx->data->ignoreConfig.output);
 		bool ignored_in = is_ignored(name, ctx->data->ignoreConfig.input);
 

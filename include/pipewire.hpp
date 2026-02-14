@@ -5,5 +5,5 @@
 class PipeWire
 {
   public:
-	int init(SubscriptionType subscriptionType);
+    int init(SubscriptionType subscriptionType);
 };
